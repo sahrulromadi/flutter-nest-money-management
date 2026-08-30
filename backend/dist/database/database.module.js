@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const pg_1 = require("pg");
 const database_constants_1 = require("./database.constants");
+pg_1.types.setTypeParser(pg_1.types.builtins.DATE, (value) => value);
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;

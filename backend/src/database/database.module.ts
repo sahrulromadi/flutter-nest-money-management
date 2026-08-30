@@ -1,7 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
 import { PG_POOL } from './database.constants';
+
+// DATE (OID 1082) balikin string 'YYYY-MM-DD' apa adanya, bukan JS Date —
+// kalau di-parse jadi Date, JSON serialize ke UTC bisa geser tanggal
+// tergantung timezone server (misal jam 00:00 WIB jadi 17:00 hari sebelumnya di UTC).
+types.setTypeParser(types.builtins.DATE, (value: string) => value);
 
 @Global()
 @Module({
