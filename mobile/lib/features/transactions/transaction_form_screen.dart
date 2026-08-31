@@ -1,0 +1,281 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../../data/local/app_database.dart';
+import '../../shared/currency_formatter.dart';
+import '../accounts/accounts_providers.dart';
+import '../auth/current_user_provider.dart';
+import '../auth/widgets/pin_pad.dart';
+import '../categories/categories_providers.dart';
+import '../goals/goals_providers.dart';
+import 'transactions_providers.dart';
+
+const _types = ['Expense', 'Income', 'Transfer'];
+
+class TransactionFormScreen extends ConsumerStatefulWidget {
+  const TransactionFormScreen({super.key, this.transactionId});
+
+  final String? transactionId;
+
+  @override
+  ConsumerState<TransactionFormScreen> createState() =>
+      _TransactionFormScreenState();
+}
+
+class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
+  String _type = 'Expense';
+  String _amount = '';
+  String? _accountId;
+  String? _transferToAccountId;
+  String? _categoryId;
+  String? _goalId;
+  DateTime _occurredAt = DateTime.now();
+  final _noteController = TextEditingController();
+  bool _saving = false;
+  String? _error;
+  bool _loadedExisting = false;
+
+  bool get _isEdit => widget.transactionId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEdit) _loadExisting();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadExisting() async {
+    if (_loadedExisting || widget.transactionId == null) return;
+    _loadedExisting = true;
+    final repo = ref.read(transactionsRepositoryProvider);
+    final t = await repo.findById(widget.transactionId!);
+    if (t == null || !mounted) return;
+    setState(() {
+      _type = t.type;
+      _amount = t.amount.toStringAsFixed(0);
+      _accountId = t.accountId;
+      _transferToAccountId = t.transferToAccountId;
+      _categoryId = t.categoryId;
+      _goalId = t.goalId;
+      _occurredAt = t.occurredAt;
+      _noteController.text = t.note ?? '';
+    });
+  }
+
+  void _onDigit(String d) => setState(() => _amount += d);
+
+  void _onBackspace() {
+    if (_amount.isEmpty) return;
+    setState(() => _amount = _amount.substring(0, _amount.length - 1));
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _occurredAt,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _occurredAt = picked);
+  }
+
+  Future<void> _submit() async {
+    final amount = double.tryParse(_amount) ?? 0;
+    if (amount <= 0) {
+      setState(() => _error = 'Nominal wajib diisi');
+      return;
+    }
+    if (_accountId == null) {
+      setState(() => _error = 'Akun wajib dipilih');
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final repo = ref.read(transactionsRepositoryProvider);
+      final note = _noteController.text.isEmpty ? null : _noteController.text;
+
+      if (_isEdit) {
+        await repo.update(
+          id: widget.transactionId!,
+          amount: amount,
+          occurredAt: _occurredAt,
+          categoryId: _type == 'Transfer' ? null : _categoryId,
+          note: note,
+          goalId: _goalId,
+        );
+      } else {
+        final userId = await ref.read(currentUserIdProvider.future);
+        await repo.create(
+          userId: userId!,
+          accountId: _accountId!,
+          type: _type,
+          amount: amount,
+          occurredAt: _occurredAt,
+          categoryId: _type == 'Transfer' ? null : _categoryId,
+          transferToAccountId: _type == 'Transfer' ? _transferToAccountId : null,
+          note: note,
+          goalId: _goalId,
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accountsAsync = ref.watch(accountsListProvider);
+    final categoriesAsync = _type == 'Transfer'
+        ? null
+        : ref.watch(categoriesListProvider(_type));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEdit ? 'Edit Transaksi' : 'Tambah Transaksi'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SegmentedButton<String>(
+              segments: _types
+                  .map((t) => ButtonSegment(value: t, label: Text(t)))
+                  .toList(),
+              selected: {_type},
+              onSelectionChanged: _isEdit
+                  ? null
+                  : (selection) => setState(() {
+                        _type = selection.first;
+                        _categoryId = null;
+                      }),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                _amount.isEmpty ? formatRupiah(0) : formatRupiah(int.parse(_amount)),
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(child: NumPad(onDigit: _onDigit, onBackspace: _onBackspace)),
+            const SizedBox(height: 16),
+            Text('Akun', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            accountsAsync.when(
+              loading: () => const CircularProgressIndicator(),
+              error: (e, _) => Text('Error: $e'),
+              data: (accounts) => Wrap(
+                spacing: 8,
+                children: accounts.map((a) {
+                  return ChoiceChip(
+                    label: Text(a.name),
+                    selected: _accountId == a.id,
+                    onSelected: _isEdit
+                        ? null
+                        : (_) => setState(() => _accountId = a.id),
+                  );
+                }).toList(),
+              ),
+            ),
+            if (_type == 'Transfer') ...[
+              const SizedBox(height: 16),
+              Text('Akun tujuan', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              accountsAsync.when(
+                loading: () => const CircularProgressIndicator(),
+                error: (e, _) => Text('Error: $e'),
+                data: (accounts) => Wrap(
+                  spacing: 8,
+                  children: accounts
+                      .where((a) => a.id != _accountId)
+                      .map((a) {
+                    return ChoiceChip(
+                      label: Text(a.name),
+                      selected: _transferToAccountId == a.id,
+                      onSelected: (_) =>
+                          setState(() => _transferToAccountId = a.id),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 16),
+              Text('Kategori', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              categoriesAsync!.when(
+                loading: () => const CircularProgressIndicator(),
+                error: (e, _) => Text('Error: $e'),
+                data: (categories) => Wrap(
+                  spacing: 8,
+                  children: categories.map((c) {
+                    return ChoiceChip(
+                      label: Text(c.name),
+                      selected: _categoryId == c.id,
+                      onSelected: (_) => setState(() => _categoryId = c.id),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _pickDate,
+              icon: const Icon(Icons.calendar_today_outlined),
+              label: Text(DateFormat('d MMMM yyyy', 'id_ID').format(_occurredAt)),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _noteController,
+              decoration: const InputDecoration(labelText: 'Catatan (opsional)'),
+            ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, _) {
+                final goalsAsync = ref.watch(goalsListProvider);
+                return goalsAsync.maybeWhen(
+                  data: (goals) {
+                    if (goals.isEmpty) return const SizedBox.shrink();
+                    return DropdownButtonFormField<String?>(
+                      initialValue: _goalId,
+                      decoration: const InputDecoration(labelText: 'Tag ke goal (opsional)'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Tidak ditag')),
+                        ...goals.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name))),
+                      ],
+                      onChanged: (v) => setState(() => _goalId = v),
+                    );
+                  },
+                  orElse: () => const SizedBox.shrink(),
+                );
+              },
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _saving ? null : _submit,
+              child: Text(_isEdit ? 'Simpan' : 'Tambah'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

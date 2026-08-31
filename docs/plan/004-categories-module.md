@@ -1,7 +1,7 @@
 # 004 — Categories Module
 
 Status: Done
-Sumber: SCHEMA.md (`categories`), PRD.md §5 Rilis 1
+Sumber: SCHEMA.md (`categories`), PRD.md #5 Rilis 1
 
 ## Context
 Gak ada kategori bawaan (dikonfirmasi user) — semua kategori dibuat manual. Support subkategori via `parent_id`.
@@ -14,7 +14,7 @@ Gak ada kategori bawaan (dikonfirmasi user) — semua kategori dibuat manual. Su
   - `GET /categories` — list, bisa filter `?type=Income|Expense`
   - `GET /categories/:id`
   - `PATCH /categories/:id`
-  - `DELETE /categories/:id` — soft delete (kategori lama dipakai transaksi historis tetap valid, PRD §9)
+  - `DELETE /categories/:id` — soft delete (kategori lama dipakai transaksi historis tetap valid, PRD #9)
 - `dto/create-category.dto.ts`, `dto/update-category.dto.ts` — `type` cuma `Income`/`Expense`
 - `src/categories/categories.module.ts`
 

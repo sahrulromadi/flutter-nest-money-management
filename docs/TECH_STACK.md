@@ -21,7 +21,9 @@ Sumber: keputusan tech stack (lihat PRD.md untuk requirement)
 
 ## 2. Mobile — Flutter
 
-Package inti: `drift` (local DB), `sqlcipher_flutter_libs` (enkripsi), `local_auth` (biometric), `flutter_secure_storage` (PIN/key storage), `dio` (HTTP client), **Riverpod** (state management).
+Package inti: `drift` (local DB), `local_auth` (biometric), `flutter_secure_storage` (PIN/key storage), `dio` (HTTP client), **Riverpod** (state management).
+
+**Enkripsi DB**: `sqlite3_flutter_libs`/`sqlcipher_flutter_libs` udah **EOL** (Feb 2026, dikonfirmasi pas eksekusi plan 012). Diganti: `package:sqlite3` v3.x + Dart [build hooks](https://dart.dev/tools/hooks) — native SQLCipher build dipilih via `hooks.user_defines.sqlite3.source: sqlcipher` di `pubspec.yaml`, bukan dependency terpisah lagi.
 
 ### Perbandingan opsi framework mobile
 | Opsi | Kelebihan | Kekurangan |

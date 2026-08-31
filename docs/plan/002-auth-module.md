@@ -1,7 +1,7 @@
 # 002 — Auth Module
 
 Status: Done
-Sumber: PRD.md (single-user, PIN/biometric di mobile — ini auth API-nya), TECH_STACK.md §3 (JWT access+refresh, argon2, no public registration)
+Sumber: PRD.md (single-user, PIN/biometric di mobile — ini auth API-nya), TECH_STACK.md #3 (JWT access+refresh, argon2, no public registration)
 
 ## Context
 App single-user, gak ada flow registrasi publik — user di-seed manual ke DB. Auth module ini nyediain login (dapetin JWT) + refresh token, dan guard yang proteksi semua endpoint lain (modul 003+ nanti otomatis ke-protect).

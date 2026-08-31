@@ -1,7 +1,7 @@
 # 007 — Budget Periods & Budgets Module
 
 Status: Done
-Sumber: SCHEMA.md (`budget_periods`, `budgets`), PRD.md §5 Rilis 2
+Sumber: SCHEMA.md (`budget_periods`, `budgets`), PRD.md #5 Rilis 2
 
 ## Context
 Custom budget period (manual, krn gajian gak tetap) + limit per kategori dalam periode aktif. DB udah enforce "cuma 1 periode aktif per user" via unique partial index (SCHEMA.md).

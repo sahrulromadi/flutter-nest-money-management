@@ -1,7 +1,7 @@
 # 011 — Reminders Module
 
 Status: Done (scope dibatasin sesuai catatan; push notif infra masih pending)
-Sumber: PRD.md §5 Rilis 3 (reminder/notifikasi)
+Sumber: PRD.md #5 Rilis 3 (reminder/notifikasi)
 
 ## Context
 PRD minta 2 jenis reminder: tagihan jatuh tempo (dari `recurring_rules`) & reminder catat pengeluaran harian (kalau belum ada transaksi hari itu). **Belum diputusin**: mekanisme notifikasi ke device (push via FCM/APNs, atau local notification di mobile yang di-schedule sendiri berdasarkan data dari backend). Plan ini scope-nya dibatasin ke bagian yang gak tergantung keputusan itu: backend nyediain data-nya aja, mobile yang nentuin gimana nampilinnya (local notification paling simpel, gak perlu push infra tambahan di v1).

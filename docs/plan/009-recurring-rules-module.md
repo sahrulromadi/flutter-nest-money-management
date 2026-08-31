@@ -1,10 +1,10 @@
 # 009 — Recurring Rules Module
 
 Status: Done
-Sumber: SCHEMA.md (`recurring_rules`), PRD.md §5 Rilis 3, §9 (edge case tanggal 31)
+Sumber: SCHEMA.md (`recurring_rules`), PRD.md #5 Rilis 3, #9 (edge case tanggal 31)
 
 ## Context
-Auto-generate transaksi berulang (gaji, tagihan, subscription). Butuh scheduler (cron) + date math yang bener buat kasus "tanggal jatuh tempo di luar tanggal valid bulan itu" (PRD §9) — pake `date-fns` (`addMonths` dkk otomatis clamp ke akhir bulan) drpd nulis date math manual yang rawan bug buat aplikasi duit.
+Auto-generate transaksi berulang (gaji, tagihan, subscription). Butuh scheduler (cron) + date math yang bener buat kasus "tanggal jatuh tempo di luar tanggal valid bulan itu" (PRD #9) — pake `date-fns` (`addMonths` dkk otomatis clamp ke akhir bulan) drpd nulis date math manual yang rawan bug buat aplikasi duit.
 
 ## Scope
 - **Dependencies**: `@nestjs/schedule`, `date-fns`

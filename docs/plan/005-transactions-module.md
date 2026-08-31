@@ -1,7 +1,7 @@
 # 005 — Transactions Module
 
 Status: Done
-Sumber: SCHEMA.md (`transactions`), PRD.md §5 Rilis 1, §9 (edge case transfer)
+Sumber: SCHEMA.md (`transactions`), PRD.md #5 Rilis 1, #9 (edge case transfer)
 
 ## Context
 Modul inti — CRUD transaksi (income/expense/transfer). DB constraint (CHECK) udah nge-enforce sebagian besar aturan (transfer wajib `transfer_to_account_id`, non-transfer wajib `category_id`, gak bisa transfer ke akun sendiri) — service tinggal validasi hal yang gak kecover CHECK (misal: `account_id`/`category_id`/`goal_id` harus milik user yang login, akun & kategori harus ada & belum di-soft-delete).

@@ -1,7 +1,7 @@
 # 010 — Goals Module
 
 Status: Done
-Sumber: SCHEMA.md (`goals`), PRD.md §5 Rilis 3
+Sumber: SCHEMA.md (`goals`), PRD.md #5 Rilis 3
 
 ## Context
 Target nabung. `current_amount` gak disimpan (konsisten sama keputusan balance on-the-fly) — dihitung dari `SUM(transactions.amount) WHERE goal_id = ini`.

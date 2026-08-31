@@ -1,7 +1,7 @@
 # 008 — Reports Module
 
 Status: Done
-Sumber: PRD.md §5 Rilis 2 (dashboard laporan & grafik)
+Sumber: PRD.md #5 Rilis 2 (dashboard laporan & grafik)
 
 ## Context
 Read-only, agregasi query di atas `transactions`. Gak ada tabel baru — modul ini query lintas tabel yang udah ada.

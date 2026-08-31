@@ -1,7 +1,7 @@
 # 003 — Accounts Module
 
 Status: Done
-Sumber: SCHEMA.md (`accounts`), PRD.md §5 Rilis 1
+Sumber: SCHEMA.md (`accounts`), PRD.md #5 Rilis 1
 
 ## Context
 Modul dompet/akun. Semua endpoint otomatis protected (global `JwtAuthGuard` dari plan 002). Saldo dihitung on-the-fly (keputusan SCHEMA.md), bukan kolom tersimpan.

@@ -1,7 +1,7 @@
 # 006 — Sync Module
 
 Status: Done
-Sumber: TECH_STACK.md §6 (sync strategy), SCHEMA.md (kolom `updated_at`/`deleted_at` tiap tabel)
+Sumber: TECH_STACK.md #6 (sync strategy), SCHEMA.md (kolom `updated_at`/`deleted_at` tiap tabel)
 
 ## Context
 Penutup Rilis 1 — tanpa ini mobile app (local-first) gak bisa punya data yang konsisten lintas device. Generik: 1 mekanisme push/pull yang jalan buat semua tabel sync-able (`accounts`, `categories`, `transactions`, `budget_periods`, `budgets`, `recurring_rules`, `goals`), bukan endpoint per tabel — biar gak ada 7x kode yang isinya sama persis.
