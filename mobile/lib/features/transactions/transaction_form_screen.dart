@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../data/local/app_database.dart';
+import '../../shared/category_visuals.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/num_pad.dart';
+import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../auth/current_user_provider.dart';
-import '../auth/widgets/pin_pad.dart';
 import '../categories/categories_providers.dart';
 import '../goals/goals_providers.dart';
 import 'transactions_providers.dart';
@@ -177,7 +178,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             Text('Akun', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             accountsAsync.when(
-              loading: () => const CircularProgressIndicator(),
+              loading: () => const SkeletonChips(),
               error: (e, _) => Text('Error: $e'),
               data: (accounts) => Wrap(
                 spacing: 8,
@@ -197,7 +198,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               Text('Akun tujuan', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               accountsAsync.when(
-                loading: () => const CircularProgressIndicator(),
+                loading: () => const SkeletonChips(),
                 error: (e, _) => Text('Error: $e'),
                 data: (accounts) => Wrap(
                   spacing: 8,
@@ -218,12 +219,17 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               Text('Kategori', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               categoriesAsync!.when(
-                loading: () => const CircularProgressIndicator(),
+                loading: () => const SkeletonChips(),
                 error: (e, _) => Text('Error: $e'),
                 data: (categories) => Wrap(
                   spacing: 8,
                   children: categories.map((c) {
                     return ChoiceChip(
+                      avatar: Icon(
+                        categoryIcon(c.icon),
+                        color: categoryColor(c.color),
+                        size: 18,
+                      ),
                       label: Text(c.name),
                       selected: _categoryId == c.id,
                       onSelected: (_) => setState(() => _categoryId = c.id),

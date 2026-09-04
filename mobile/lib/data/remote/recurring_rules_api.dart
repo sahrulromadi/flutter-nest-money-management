@@ -32,7 +32,7 @@ class RecurringRuleDto {
         accountId: j['account_id'] as String,
         categoryId: j['category_id'] as String,
         type: j['type'] as String,
-        amount: double.parse(j['amount'] as String),
+        amount: (j['amount'] as num).toDouble(),
         note: j['note'] as String?,
         intervalUnit: j['interval_unit'] as String,
         intervalValue: j['interval_value'] as int,

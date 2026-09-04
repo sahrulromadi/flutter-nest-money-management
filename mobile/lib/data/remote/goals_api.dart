@@ -22,7 +22,7 @@ class GoalDto {
   factory GoalDto.fromJson(Map<String, dynamic> j) => GoalDto(
         id: j['id'] as String,
         name: j['name'] as String,
-        targetAmount: double.parse(j['target_amount'] as String),
+        targetAmount: (j['target_amount'] as num).toDouble(),
         currentAmount: (j['currentAmount'] as num).toDouble(),
         percentage: j['percentage'] as int,
         dueDate: j['due_date'] == null ? null : DateTime.parse(j['due_date'] as String),

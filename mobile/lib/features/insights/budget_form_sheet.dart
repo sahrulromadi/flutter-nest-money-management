@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/skeleton.dart';
 import '../categories/categories_providers.dart';
 import 'insights_providers.dart';
 
@@ -77,7 +78,7 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
           Text('Set Budget Kategori', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 16),
           categoriesAsync.when(
-            loading: () => const CircularProgressIndicator(),
+            loading: () => const Skeleton(height: 48, radius: 4),
             error: (e, _) => Text('Error: $e'),
             data: (categories) => DropdownButtonFormField<String>(
               initialValue: _categoryId,

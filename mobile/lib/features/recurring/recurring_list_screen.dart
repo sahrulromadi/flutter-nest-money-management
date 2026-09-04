@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/skeleton.dart';
 import 'recurring_form_screen.dart';
 import 'recurring_providers.dart';
 
@@ -16,10 +18,17 @@ class RecurringListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Transaksi Berulang')),
       body: rulesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const SkeletonList(count: 4),
+        error: (e, _) => AppErrorState(
+            onRetry: () => ref.invalidate(recurringRulesListProvider)),
         data: (rules) {
-          if (rules.isEmpty) return const Center(child: Text('Belum ada aturan berulang'));
+          if (rules.isEmpty) {
+            return AppEmptyState.recurring(
+              onAdd: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RecurringFormScreen()),
+              ),
+            );
+          }
           return ListView(
             children: rules.map((r) {
               return Dismissible(

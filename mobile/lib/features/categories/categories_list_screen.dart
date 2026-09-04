@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/app_illustration.dart';
+import '../../shared/category_visuals.dart';
+import '../../shared/skeleton.dart';
 import 'categories_providers.dart';
 import 'category_form_screen.dart';
 
@@ -54,11 +57,12 @@ class _CategoryTypeList extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesListProvider(type));
 
     return categoriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      loading: () => const SkeletonList(count: 5),
+      error: (e, _) =>
+          AppErrorState(onRetry: () => ref.invalidate(categoriesListProvider(type))),
       data: (categories) {
         if (categories.isEmpty) {
-          return const Center(child: Text('Belum ada kategori'));
+          return AppEmptyState.categories();
         }
         final parents = categories.where((c) => c.parentId == null).toList();
         final children = categories.where((c) => c.parentId != null).toList();
@@ -70,7 +74,10 @@ class _CategoryTypeList extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.label_outline),
+                  leading: Icon(
+                    categoryIcon(parent.icon),
+                    color: categoryColor(parent.color),
+                  ),
                   title: Text(parent.name),
                   onTap: () => _openForm(context, parent),
                 ),
@@ -78,7 +85,10 @@ class _CategoryTypeList extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 32),
                     child: ListTile(
-                      leading: const Icon(Icons.subdirectory_arrow_right),
+                      leading: Icon(
+                        categoryIcon(sub.icon),
+                        color: categoryColor(sub.color),
+                      ),
                       title: Text(sub.name),
                       onTap: () => _openForm(context, sub),
                     ),

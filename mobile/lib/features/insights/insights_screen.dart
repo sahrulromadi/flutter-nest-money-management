@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
 import '../categories/categories_providers.dart';
@@ -28,51 +30,83 @@ class InsightsScreen extends ConsumerWidget {
           ref.invalidate(categoryBreakdownProvider);
           ref.invalidate(cashflowTrendProvider);
         },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            activePeriodAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e'),
-              data: (period) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    period == null
-                        ? 'Belum ada periode aktif'
-                        : 'Periode aktif: sejak ${DateFormat('d MMM yyyy', 'id_ID').format(period.startedAt)}',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  TextButton(
-                    onPressed: () => _startNewPeriod(context, ref),
-                    child: const Text('Mulai periode baru'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (activePeriodAsync.value != null) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Budget', style: Theme.of(context).textTheme.titleMedium),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => showBudgetFormSheet(context),
-                  ),
-                ],
-              ),
-              const _BudgetList(),
-              const SizedBox(height: 24),
+        child: activePeriodAsync.when(
+          loading: () => ListView(
+            padding: const EdgeInsets.all(16),
+            children: const [
+              Skeleton(width: 220, height: 20),
+              SizedBox(height: 24),
+              Skeleton(height: 40, radius: 4),
+              SizedBox(height: 12),
+              Skeleton(height: 160, radius: 6),
             ],
-            Text('Cashflow Trend', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            const _CashflowChart(),
-            const SizedBox(height: 24),
-            Text('Breakdown Pengeluaran', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            const _CategoryBreakdownChart(),
-          ],
+          ),
+          error: (e, _) => AppErrorState(
+            onRetry: () => ref.invalidate(activeBudgetPeriodProvider),
+          ),
+          // Laporan (reports API) di-scope ke periode budget aktif. Tanpa
+          // periode aktif, backend `/reports/*` balik 404 by design — jadi
+          // jangan render chart-nya, tampilin ajakan mulai periode.
+          data: (period) {
+            if (period == null) {
+              return ListView(
+                children: [
+                  const SizedBox(height: 40),
+                  AppEmptyState.insights(),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: FilledButton(
+                      onPressed: () => _startNewPeriod(context, ref),
+                      child: const Text('Mulai periode budget'),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Periode aktif: sejak ${DateFormat('d MMM yyyy', 'id_ID').format(period.startedAt)}',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _startNewPeriod(context, ref),
+                      child: const Text('Periode baru'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Budget',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => showBudgetFormSheet(context),
+                    ),
+                  ],
+                ),
+                const _BudgetList(),
+                const SizedBox(height: 24),
+                Text('Cashflow Trend',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                const _CashflowChart(),
+                const SizedBox(height: 24),
+                Text('Breakdown Pengeluaran',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                const _CategoryBreakdownChart(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -102,8 +136,19 @@ class _BudgetList extends ConsumerWidget {
     final semantic = context.semanticColors;
 
     return budgetsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Error: $e'),
+      loading: () => const Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Skeleton(height: 40, radius: 4),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Skeleton(height: 40, radius: 4),
+          ),
+        ],
+      ),
+      error: (e, _) => AppErrorState(onRetry: () => ref.invalidate(budgetsProvider)),
       data: (budgets) {
         if (budgets.isEmpty) return const Text('Belum ada budget di periode ini');
         return Column(
@@ -153,8 +198,12 @@ class _CashflowChart extends ConsumerWidget {
     final semantic = context.semanticColors;
 
     return trendAsync.when(
-      loading: () => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e'),
+      loading: () => const SizedBox(
+        height: 160,
+        child: Skeleton(height: 160, radius: 6),
+      ),
+      error: (e, _) =>
+          AppErrorState(onRetry: () => ref.invalidate(cashflowTrendProvider)),
       data: (points) {
         if (points.isEmpty) return const Text('Belum ada data');
         return Column(
@@ -216,8 +265,15 @@ class _CategoryBreakdownChart extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return breakdownAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Error: $e'),
+      loading: () => const Column(
+        children: [
+          Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Skeleton(height: 16)),
+          Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Skeleton(height: 16)),
+          Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Skeleton(height: 16)),
+        ],
+      ),
+      error: (e, _) =>
+          AppErrorState(onRetry: () => ref.invalidate(categoryBreakdownProvider)),
       data: (items) {
         if (items.isEmpty) return const Text('Belum ada data');
         final maxTotal = items.map((e) => e.total).reduce((a, b) => a > b ? a : b);

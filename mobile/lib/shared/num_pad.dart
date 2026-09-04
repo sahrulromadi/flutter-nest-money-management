@@ -1,34 +1,7 @@
 import 'package:flutter/material.dart';
 
-class PinDots extends StatelessWidget {
-  const PinDots({super.key, required this.length, required this.filled});
-
-  final int length;
-  final int filled;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(length, (i) {
-        final isFilled = i < filled;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled
-                ? Theme.of(context).colorScheme.primary
-                : Colors.transparent,
-            border: Border.all(color: Theme.of(context).colorScheme.outline),
-          ),
-        );
-      }),
-    );
-  }
-}
-
+/// Numpad custom buat input nominal transaksi (bukan keyboard qwerty —
+/// DESIGN.md §6 "Add Transaction").
 class NumPad extends StatelessWidget {
   const NumPad({super.key, required this.onDigit, required this.onBackspace});
 

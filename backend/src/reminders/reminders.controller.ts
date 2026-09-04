@@ -18,9 +18,4 @@ export class RemindersController {
     const days = withinDays ? Number(withinDays) : 3;
     return this.remindersService.upcomingBills(user.sub, days);
   }
-
-  @Get('daily-check')
-  dailyCheck(@CurrentUser() user: TokenPayload) {
-    return this.remindersService.dailyCheck(user.sub);
-  }
 }

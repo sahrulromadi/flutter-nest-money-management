@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Siluet gagak — geometri identik dgn CrowMark (_CrowPainter) di app.
+     Fraksi painter dipetakan ke kotak 72x72 (offset 18) dalam viewport
+     adaptive-icon 108x108 (zona aman dari mask bulat/rounded). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Badan + kepala + paruh + ekor -->
+    <path
+        android:fillColor="#1A1A1E"
+        android:pathData="M32.4,62.64
+            Q39.6,39.6 57.6,42.48
+            Q65.52,29.52 71.28,32.4
+            Q68.4,38.16 69.84,42.48
+            L84.24,39.6
+            L71.28,48.24
+            Q75.6,65.52 61.2,74.16
+            Q46.8,81.36 32.4,62.64 Z" />
+
+    <!-- Sayap terangkat -->
+    <path
+        android:fillColor="#1A1A1E"
+        android:pathData="M46.8,54
+            Q39.6,30.96 25.2,23.76
+            Q38.16,42.48 42.48,58.32 Z" />
+
+    <!-- Kaki -->
+    <path
+        android:strokeColor="#1A1A1E"
+        android:strokeWidth="2.5"
+        android:pathData="M48.24,74.16 L48.24,84.24 M55.44,75.6 L55.44,84.24" />
+</vector>

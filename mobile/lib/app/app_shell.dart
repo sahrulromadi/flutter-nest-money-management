@@ -27,6 +27,8 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
+        height: 64,
+        padding: EdgeInsets.zero,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(_labels.length, (index) {
@@ -70,12 +72,30 @@ class _NavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color),
-            Text(label, style: TextStyle(color: color, fontSize: 11)),
+            // Garis lapangan di atas item aktif.
+            Container(
+              height: 3,
+              width: 20,
+              margin: const EdgeInsets.only(bottom: 3),
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
+            ),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
           ],
         ),
       ),

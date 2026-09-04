@@ -36,7 +36,7 @@ class BudgetDto {
   factory BudgetDto.fromJson(Map<String, dynamic> j) => BudgetDto(
         id: j['id'] as String,
         categoryId: j['category_id'] as String,
-        limitAmount: double.parse(j['limit_amount'] as String),
+        limitAmount: (j['limit_amount'] as num).toDouble(),
         spent: (j['spent'] as num).toDouble(),
         percentage: j['percentage'] as int,
       );

@@ -9,13 +9,6 @@ const _billChannel = AndroidNotificationDetails(
   importance: Importance.defaultImportance,
 );
 
-const _dailyChannel = AndroidNotificationDetails(
-  'daily_check',
-  'Reminder Catat Harian',
-  channelDescription: 'Reminder kalau belum ada transaksi tercatat hari ini',
-  importance: Importance.defaultImportance,
-);
-
 /// Wrap `flutter_local_notifications` — dipake sesuai keputusan plan 011/023:
 /// local notification, bukan push/FCM.
 class NotificationService {
@@ -36,6 +29,10 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
 
+    // plan 024: fitur "reminder catat harian" dihapus. Batalin notif harian
+    // (id tetap 0) yang mungkin udah ke-schedule di device dari versi lama.
+    await _plugin.cancel(0);
+
     _initialized = true;
   }
 
@@ -52,26 +49,6 @@ class NotificationService {
       tz.TZDateTime.from(whenLocal, tz.local),
       const NotificationDetails(android: _billChannel),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
-  }
-
-  Future<void> scheduleDailyCheckReminder({
-    required int hour,
-    required int minute,
-  }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
-    }
-    await _plugin.zonedSchedule(
-      0, // id tetap — reminder harian cuma 1 instance aktif, replace tiap dijadwal ulang
-      'Belum catat transaksi hari ini',
-      'Yuk catat pemasukan/pengeluaran hari ini biar gak kelewat',
-      scheduled,
-      const NotificationDetails(android: _dailyChannel),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 

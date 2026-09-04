@@ -5,12 +5,6 @@ enum AuthPhase {
   /// Belum ada token — perlu login.
   loggedOut,
 
-  /// Baru login, belum ada PIN — perlu setup PIN dulu.
-  needsPinSetup,
-
-  /// Ada token & PIN, tapi session ini belum di-unlock.
-  locked,
-
-  /// Siap dipake.
+  /// Ada token, siap dipakai. (Fitur PIN/biometric dihapus — plan 025.)
   unlocked,
 }

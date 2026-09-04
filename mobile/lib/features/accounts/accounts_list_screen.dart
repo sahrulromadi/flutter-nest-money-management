@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/skeleton.dart';
 import 'account_form_screen.dart';
 import 'accounts_providers.dart';
 
@@ -16,23 +18,12 @@ class AccountsListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Akun')),
       body: accountsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const SkeletonList(count: 4),
+        error: (e, _) =>
+            AppErrorState(onRetry: () => ref.invalidate(accountsListProvider)),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Belum ada akun'),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: () => _openForm(context),
-                    child: const Text('Tambah akun'),
-                  ),
-                ],
-              ),
-            );
+            return AppEmptyState.accounts(onAdd: () => _openForm(context));
           }
           return ListView.builder(
             itemCount: accounts.length,
@@ -80,11 +71,7 @@ class _AccountTile extends ConsumerWidget {
       title: Text(account.name),
       subtitle: Text(account.type),
       trailing: balanceAsync.when(
-        loading: () => const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        loading: () => const Skeleton(width: 64, height: 16),
         error: (error, stackTrace) => const Text('-'),
         data: (balance) => Text(
           formatRupiah(balance),

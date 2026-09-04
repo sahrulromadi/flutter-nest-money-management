@@ -25,9 +25,6 @@ class ReminderScheduler {
     if (_settings.billsEnabled) {
       await _scheduleBills();
     }
-    if (_settings.dailyEnabled) {
-      await NotificationService.instance.scheduleDailyCheckReminder(hour: 20, minute: 0);
-    }
   }
 
   Future<void> _scheduleBills() async {

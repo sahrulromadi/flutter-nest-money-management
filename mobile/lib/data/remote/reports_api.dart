@@ -22,7 +22,7 @@ class CategoryBreakdownItem {
   factory CategoryBreakdownItem.fromJson(Map<String, dynamic> j) => CategoryBreakdownItem(
         categoryId: j['category_id'] as String,
         categoryName: j['category_name'] as String,
-        total: double.parse(j['total'] as String),
+        total: (j['total'] as num).toDouble(),
       );
 }
 
@@ -34,8 +34,8 @@ class CashflowPoint {
 
   factory CashflowPoint.fromJson(Map<String, dynamic> j) => CashflowPoint(
         day: DateTime.parse(j['day'] as String),
-        income: double.parse(j['income'] as String),
-        expense: double.parse(j['expense'] as String),
+        income: (j['income'] as num).toDouble(),
+        expense: (j['expense'] as num).toDouble(),
       );
 }
 

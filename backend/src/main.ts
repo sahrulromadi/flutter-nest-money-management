@@ -19,7 +19,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
+  // Bind 0.0.0.0 biar bisa diakses dari HP di LAN (bukan cuma localhost).
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 }
 void bootstrap();

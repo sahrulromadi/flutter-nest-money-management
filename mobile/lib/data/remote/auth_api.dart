@@ -17,7 +17,12 @@ class AuthTokens {
 /// (endpoint public, dan refresh sendiri yang jadi sumber token baru,
 /// jadi gak boleh lewat interceptor yang nyoba refresh lagi kalau gagal).
 class AuthApi {
-  AuthApi() : _dio = Dio(BaseOptions(baseUrl: kApiBaseUrl));
+  AuthApi(String baseUrl)
+      : _dio = Dio(BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: kApiConnectTimeout,
+          receiveTimeout: kApiReceiveTimeout,
+        ));
 
   final Dio _dio;
 

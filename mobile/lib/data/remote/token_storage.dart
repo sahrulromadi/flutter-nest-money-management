@@ -1,13 +1,12 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Simpen access/refresh token + PIN hash di secure storage (OS keystore).
+/// Simpen access/refresh token di secure storage (OS keystore).
 class TokenStorage {
   const TokenStorage._();
 
   static const _storage = FlutterSecureStorage();
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
-  static const _pinHashKey = 'pin_hash';
 
   static Future<void> saveTokens({
     required String accessToken,
@@ -34,11 +33,4 @@ class TokenStorage {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
   }
-
-  static Future<void> savePinHash(String hash) =>
-      _storage.write(key: _pinHashKey, value: hash);
-
-  static Future<String?> readPinHash() => _storage.read(key: _pinHashKey);
-
-  static Future<bool> hasPinSet() async => (await readPinHash()) != null;
 }

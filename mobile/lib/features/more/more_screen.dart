@@ -1,19 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/notifications/notification_service.dart';
 import '../accounts/accounts_list_screen.dart';
+import '../auth/auth_controller.dart';
 import '../categories/categories_list_screen.dart';
 import '../goals/goals_list_screen.dart';
 import '../recurring/recurring_list_screen.dart';
 import '../reminders/reminder_settings_tiles.dart';
+import '../settings/settings_screen.dart';
 import 'sync_tile.dart';
 
-/// Sisanya (theme toggle, PIN reset) belum masuk plan manapun, backlog
-/// kecil setelah scope PRD Rilis 1-3 selesai.
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Keluar?'),
+        content: const Text(
+          'Data lokal tetap tersimpan di device. Tinggal login lagi buat sync.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Keluar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    // Batalin reminder yang ke-schedule buat user ini.
+    await NotificationService.instance.cancelAll();
+    // logout() clear token & set state loggedOut → router auto-redirect ke /login.
+    await ref.read(authControllerProvider.notifier).logout();
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(
@@ -54,6 +83,24 @@ class MoreScreen extends StatelessWidget {
           const ReminderSettingsTiles(),
           const Divider(),
           const SyncTile(),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Pengaturan'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: Icon(Icons.logout,
+                color: Theme.of(context).colorScheme.error),
+            title: Text(
+              'Keluar',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            onTap: () => _confirmLogout(context, ref),
+          ),
         ],
       ),
     );

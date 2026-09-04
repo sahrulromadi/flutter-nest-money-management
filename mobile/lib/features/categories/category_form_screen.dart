@@ -2,30 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/category_visuals.dart';
 import '../auth/current_user_provider.dart';
 import 'categories_providers.dart';
-
-const _iconChoices = [
-  Icons.fastfood_outlined,
-  Icons.directions_car_outlined,
-  Icons.home_outlined,
-  Icons.shopping_bag_outlined,
-  Icons.local_hospital_outlined,
-  Icons.school_outlined,
-  Icons.movie_outlined,
-  Icons.work_outline,
-  Icons.savings_outlined,
-  Icons.label_outline,
-];
-
-const _colorChoices = [
-  Colors.orange,
-  Colors.red,
-  Colors.green,
-  Colors.blue,
-  Colors.purple,
-  Colors.teal,
-];
 
 class CategoryFormScreen extends ConsumerStatefulWidget {
   const CategoryFormScreen({super.key, this.category, this.defaultType});
@@ -156,21 +135,20 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
-                children: _iconChoices.map((icon) {
-                  final selected = _icon == icon.codePoint.toString();
-                  return IconButton(
-                    isSelected: selected,
-                    icon: Icon(icon),
-                    onPressed: () =>
-                        setState(() => _icon = icon.codePoint.toString()),
-                  );
-                }).toList(),
+                children: [
+                  for (var i = 0; i < kCategoryIcons.length; i++)
+                    IconButton(
+                      isSelected: _icon == '$i',
+                      icon: Icon(kCategoryIcons[i]),
+                      onPressed: () => setState(() => _icon = '$i'),
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: _colorChoices.map((color) {
-                  final hex = '#${color.toARGB32().toRadixString(16).substring(2)}';
+                children: kCategoryColors.map((color) {
+                  final hex = categoryColorToHex(color);
                   final selected = _color == hex;
                   return GestureDetector(
                     onTap: () => setState(() => _color = hex),

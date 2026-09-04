@@ -8,10 +8,4 @@ export class RemindersService {
   upcomingBills(userId: string, withinDays: number) {
     return this.remindersRepository.findUpcomingBills(userId, withinDays);
   }
-
-  async dailyCheck(userId: string) {
-    const hasTransactionToday =
-      await this.remindersRepository.hasTransactionToday(userId);
-    return { hasTransactionToday };
-  }
 }

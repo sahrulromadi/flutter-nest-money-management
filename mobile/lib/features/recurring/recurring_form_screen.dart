@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../categories/categories_providers.dart';
 import 'recurring_providers.dart';
@@ -93,7 +94,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
           ),
           const SizedBox(height: 16),
           accountsAsync.when(
-            loading: () => const CircularProgressIndicator(),
+            loading: () => const SkeletonChips(),
             error: (e, _) => Text('Error: $e'),
             data: (accounts) => DropdownButtonFormField<String>(
               initialValue: _accountId,
@@ -104,7 +105,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
           ),
           const SizedBox(height: 16),
           categoriesAsync.when(
-            loading: () => const CircularProgressIndicator(),
+            loading: () => const SkeletonChips(),
             error: (e, _) => Text('Error: $e'),
             data: (categories) => DropdownButtonFormField<String>(
               initialValue: _categoryId,

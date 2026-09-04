@@ -9,7 +9,7 @@ class UpcomingBillDto {
 
   factory UpcomingBillDto.fromJson(Map<String, dynamic> j) => UpcomingBillDto(
         id: j['id'] as String,
-        amount: double.parse(j['amount'] as String),
+        amount: (j['amount'] as num).toDouble(),
         nextRunDate: DateTime.parse(j['next_run_date'] as String),
       );
 }
@@ -26,10 +26,5 @@ class RemindersApi {
       queryParameters: {'withinDays': withinDays},
     );
     return res.data!.map((e) => UpcomingBillDto.fromJson(e as Map<String, dynamic>)).toList();
-  }
-
-  Future<bool> hasTransactionToday() async {
-    final res = await _dio.get<Map<String, dynamic>>('/reminders/daily-check');
-    return res.data!['hasTransactionToday'] as bool;
   }
 }

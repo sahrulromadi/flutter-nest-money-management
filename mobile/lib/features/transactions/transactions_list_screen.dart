@@ -4,42 +4,208 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/app_illustration.dart';
+import '../../shared/category_visuals.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../accounts/accounts_providers.dart';
+import '../categories/categories_providers.dart';
+import '../home/home_providers.dart';
 import 'transactions_providers.dart';
+
+/// Filter akun aktif di halaman Transactions. `null` = semua akun.
+final txnAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transactionsAsync =
-        ref.watch(transactionsListProvider(const TransactionFilter()));
+    final accountId = ref.watch(txnAccountFilterProvider);
+    final transactionsAsync = ref.watch(
+      transactionsListProvider(TransactionFilter(accountId: accountId)),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transaksi')),
-      body: transactionsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (transactions) {
-          if (transactions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Belum ada transaksi'),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: () => context.push('/transactions/add'),
-                    child: const Text('Catat transaksi pertama'),
-                  ),
-                ],
+      body: Column(
+        children: [
+          const _AccountBalanceStrip(),
+          Expanded(
+            child: transactionsAsync.when(
+              loading: () => const SkeletonList(count: 8),
+              error: (e, _) => AppErrorState(
+                onRetry: () => ref.invalidate(transactionsListProvider(
+                    TransactionFilter(accountId: accountId))),
               ),
-            );
-          }
-          return _GroupedList(transactions: transactions);
-        },
+              data: (transactions) {
+                if (transactions.isEmpty) {
+                  return accountId != null
+                      ? const _EmptyState(filtered: true)
+                      : AppEmptyState.transactions(
+                          onAdd: () => context.push('/transactions/add'),
+                        );
+                }
+                return _GroupedList(transactions: transactions);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.filtered});
+
+  final bool filtered;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(filtered
+              ? 'Belum ada transaksi di akun ini'
+              : 'Belum ada transaksi'),
+          if (!filtered) ...[
+            const SizedBox(height: 8),
+            FilledButton(
+              onPressed: () => context.push('/transactions/add'),
+              child: const Text('Catat transaksi pertama'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Strip horizontal saldo per akun di atas list. Chip "Semua" (total gabungan)
+/// + 1 chip per akun. Tap → filter list ke akun itu (`txnAccountFilterProvider`).
+class _AccountBalanceStrip extends ConsumerWidget {
+  const _AccountBalanceStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accountsAsync = ref.watch(accountsListProvider);
+    return accountsAsync.maybeWhen(
+      data: (accounts) {
+        if (accounts.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 92,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            children: [
+              const _TotalBalanceCard(),
+              for (final a in accounts) _AccountBalanceCard(account: a),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _TotalBalanceCard extends ConsumerWidget {
+  const _TotalBalanceCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = ref.watch(totalBalanceProvider);
+    final selected = ref.watch(txnAccountFilterProvider) == null;
+    return _BalanceCard(
+      label: 'Semua',
+      value: total.maybeWhen(
+        data: (v) => formatRupiah(v),
+        orElse: () => '…',
+      ),
+      selected: selected,
+      onTap: () => ref.read(txnAccountFilterProvider.notifier).state = null,
+    );
+  }
+}
+
+class _AccountBalanceCard extends ConsumerWidget {
+  const _AccountBalanceCard({required this.account});
+
+  final Account account;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balance = ref.watch(accountBalanceProvider(account));
+    final selected = ref.watch(txnAccountFilterProvider) == account.id;
+    return _BalanceCard(
+      label: account.name,
+      value: balance.maybeWhen(
+        data: (v) => formatRupiah(v),
+        orElse: () => '…',
+      ),
+      selected: selected,
+      onTap: () =>
+          ref.read(txnAccountFilterProvider.notifier).state = account.id,
+    );
+  }
+}
+
+class _BalanceCard extends StatelessWidget {
+  const _BalanceCard({
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 140,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected ? scheme.primaryContainer : scheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outline,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -92,6 +258,9 @@ class _TransactionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semantic = context.semanticColors;
+    final cat = transaction.categoryId == null
+        ? null
+        : ref.watch(categoriesByIdProvider)[transaction.categoryId];
     final color = switch (transaction.type) {
       'Income' => semantic.income,
       'Expense' => semantic.expense,
@@ -116,11 +285,14 @@ class _TransactionTile extends ConsumerWidget {
           ref.read(transactionsRepositoryProvider).delete(transaction.id),
       child: ListTile(
         leading: Icon(
-          switch (transaction.type) {
-            'Income' => Icons.arrow_downward,
-            'Expense' => Icons.arrow_upward,
-            _ => Icons.swap_horiz,
-          },
+          cat != null
+              ? categoryIcon(cat.icon)
+              : switch (transaction.type) {
+                  'Income' => Icons.arrow_downward,
+                  'Expense' => Icons.arrow_upward,
+                  _ => Icons.swap_horiz,
+                },
+          color: cat != null ? categoryColor(cat.color) : null,
         ),
         title: Text(transaction.note?.isNotEmpty == true ? transaction.note! : transaction.type),
         subtitle: _AccountLabel(accountId: transaction.accountId),

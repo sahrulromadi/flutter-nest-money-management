@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import 'goal_form_screen.dart';
 import 'goals_providers.dart';
@@ -18,10 +20,17 @@ class GoalsListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Goals')),
       body: goalsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const SkeletonList(count: 4),
+        error: (e, _) =>
+            AppErrorState(onRetry: () => ref.invalidate(goalsListProvider)),
         data: (goals) {
-          if (goals.isEmpty) return const Center(child: Text('Belum ada goal'));
+          if (goals.isEmpty) {
+            return AppEmptyState.goals(
+              onAdd: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GoalFormScreen()),
+              ),
+            );
+          }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: goals.map((g) {

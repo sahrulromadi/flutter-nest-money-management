@@ -31,15 +31,4 @@ export class RemindersRepository {
     );
     return result.rows;
   }
-
-  async hasTransactionToday(userId: string): Promise<boolean> {
-    const result = await this.pool.query<{ exists: boolean }>(
-      `SELECT EXISTS(
-         SELECT 1 FROM transactions
-         WHERE user_id = $1 AND deleted_at IS NULL AND occurred_at = CURRENT_DATE
-       ) AS exists`,
-      [userId],
-    );
-    return result.rows[0].exists;
-  }
 }

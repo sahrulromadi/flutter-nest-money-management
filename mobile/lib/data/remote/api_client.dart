@@ -6,9 +6,12 @@ import 'token_storage.dart';
 /// Dio dengan interceptor: attach Bearer token, auto-refresh pas 401,
 /// retry request asli. Dipake semua API call selain login/refresh.
 class ApiClient {
-  ApiClient({AuthApi? authApi})
-      : _authApi = authApi ?? AuthApi(),
-        dio = Dio(BaseOptions(baseUrl: kApiBaseUrl)) {
+  ApiClient(this._authApi, {required String baseUrl})
+      : dio = Dio(BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: kApiConnectTimeout,
+          receiveTimeout: kApiReceiveTimeout,
+        )) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {

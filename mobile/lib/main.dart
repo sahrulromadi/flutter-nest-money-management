@@ -14,43 +14,15 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MoneyManagementApp()));
 }
 
-class MoneyManagementApp extends ConsumerStatefulWidget {
+class MoneyManagementApp extends ConsumerWidget {
   const MoneyManagementApp({super.key});
 
   @override
-  ConsumerState<MoneyManagementApp> createState() => _MoneyManagementAppState();
-}
-
-class _MoneyManagementAppState extends ConsumerState<MoneyManagementApp>
-    with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // App dikunci lagi tiap balik dari background (PRD: PIN/biometric lock
-    // "tiap dibuka", bukan cuma cold start).
-    if (state == AppLifecycleState.resumed) {
-      ref.read(authControllerProvider.notifier).relock();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    // Tiap kali app unlocked (buka pertama kali/abis lock screen), refresh
-    // reminder — best-effort, gak boleh crash app kalau backend gak bisa
-    // diakses (misal offline).
+    // Tiap kali app jadi unlocked (cold start dgn token / abis login), refresh
+    // reminder — best-effort, gak boleh crash app kalau backend gak kejangkau.
     ref.listen(authControllerProvider, (previous, next) {
       if (next == AuthPhase.unlocked) {
         ref.read(reminderSchedulerProvider).refresh().catchError((_) {});
