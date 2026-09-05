@@ -9,6 +9,8 @@ import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
+import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 import '../categories/categories_providers.dart';
 import 'budget_form_sheet.dart';
 import 'insights_providers.dart';
@@ -18,6 +20,18 @@ class InsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Budget & reports murni backend (belum local-first) — jangan nembak
+    // network kalau belum login, nanti 401 keliatan sbg error yg bingungin.
+    if (ref.watch(authControllerProvider) != AuthPhase.unlocked) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Insights')),
+        body: const AppLoginRequiredState(
+          message: 'Login dulu buat lihat budget & laporan.\n'
+              'Insights disimpen di server, belum ada versi offline-nya.',
+        ),
+      );
+    }
+
     final activePeriodAsync = ref.watch(activeBudgetPeriodProvider);
 
     return Scaffold(

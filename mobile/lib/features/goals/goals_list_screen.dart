@@ -6,6 +6,8 @@ import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
+import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 import 'goal_form_screen.dart';
 import 'goals_providers.dart';
 
@@ -14,8 +16,21 @@ class GoalsListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final goalsAsync = ref.watch(goalsListProvider);
     final semantic = context.semanticColors;
+
+    // Goals murni backend (belum local-first) — jangan nembak network kalau
+    // belum login, nanti 401 keliatan sbg "gagal ambil data" yg bingungin.
+    if (ref.watch(authControllerProvider) != AuthPhase.unlocked) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Goals')),
+        body: const AppLoginRequiredState(
+          message: 'Login dulu buat pasang & liat target tabungan.\n'
+              'Goals disimpen di server, belum ada versi offline-nya.',
+        ),
+      );
+    }
+
+    final goalsAsync = ref.watch(goalsListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Goals')),

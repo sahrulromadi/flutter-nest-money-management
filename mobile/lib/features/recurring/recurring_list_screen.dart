@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
+import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 import 'recurring_form_screen.dart';
 import 'recurring_providers.dart';
 
@@ -13,6 +15,18 @@ class RecurringListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Recurring rules murni backend (belum local-first) — jangan nembak
+    // network kalau belum login.
+    if (ref.watch(authControllerProvider) != AuthPhase.unlocked) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Transaksi Berulang')),
+        body: const AppLoginRequiredState(
+          message: 'Login dulu buat pasang transaksi berulang.\n'
+              'Fitur ini disimpen di server, belum ada versi offline-nya.',
+        ),
+      );
+    }
+
     final rulesAsync = ref.watch(recurringRulesListProvider);
 
     return Scaffold(
