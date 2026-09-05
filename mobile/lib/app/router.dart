@@ -16,16 +16,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/home',
+    // Login OPSIONAL (plan: pakai app tanpa login dulu, local-first). Ga ada
+    // paksa redirect ke /login — dia cuma route biasa yg dibuka dari More.
+    // Satu-satunya redirect: kalau udah login terus buka /login lagi (mis.
+    // abis sukses submit), balikin ke /home.
     redirect: (context, state) {
-      final location = state.matchedLocation;
-      switch (authPhase) {
-        case AuthPhase.loading:
-          return null;
-        case AuthPhase.loggedOut:
-          return location == '/login' ? null : '/login';
-        case AuthPhase.unlocked:
-          return location == '/login' ? '/home' : null;
+      if (authPhase == AuthPhase.unlocked && state.matchedLocation == '/login') {
+        return '/home';
       }
+      return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),

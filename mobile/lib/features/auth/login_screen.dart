@@ -69,6 +69,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      // Login opsional sekarang (bisa dibuka dari More kapan aja) — kasih
+      // tombol tutup, beda dari dulu pas ini gerbang wajib tanpa jalan keluar.
+      appBar: Navigator.of(context).canPop()
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              shape: const Border(),
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

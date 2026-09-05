@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/sync/sync_status_provider.dart';
+import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 
 class SyncTile extends ConsumerWidget {
   const SyncTile({super.key});
@@ -11,14 +13,17 @@ class SyncTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(syncStatusProvider);
     final isSyncing = state.status == SyncStatus.syncing;
+    final loggedIn = ref.watch(authControllerProvider) == AuthPhase.unlocked;
 
-    final subtitle = switch (state.status) {
-      SyncStatus.syncing => 'Syncing...',
-      SyncStatus.error => 'Gagal sync: ${state.errorMessage}',
-      _ => state.lastSyncedAt == null
-          ? 'Belum pernah sync'
-          : 'Terakhir sync: ${DateFormat('d MMM yyyy HH:mm', 'id_ID').format(state.lastSyncedAt!)}',
-    };
+    final subtitle = !loggedIn
+        ? 'Login dulu buat sync ke server'
+        : switch (state.status) {
+            SyncStatus.syncing => 'Syncing...',
+            SyncStatus.error => 'Gagal sync: ${state.errorMessage}',
+            _ => state.lastSyncedAt == null
+                ? 'Belum pernah sync'
+                : 'Terakhir sync: ${DateFormat('d MMM yyyy HH:mm', 'id_ID').format(state.lastSyncedAt!)}',
+          };
 
     return ListTile(
       leading: isSyncing
@@ -30,7 +35,9 @@ class SyncTile extends ConsumerWidget {
           : const Icon(Icons.sync),
       title: const Text('Sync'),
       subtitle: Text(subtitle),
-      onTap: isSyncing ? null : () => ref.read(syncStatusProvider.notifier).syncNow(),
+      onTap: (isSyncing || !loggedIn)
+          ? null
+          : () => ref.read(syncStatusProvider.notifier).syncNow(),
     );
   }
 }
