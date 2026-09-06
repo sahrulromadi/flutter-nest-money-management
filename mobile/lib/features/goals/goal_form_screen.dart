@@ -49,6 +49,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
             targetAmount: target,
             dueDate: _dueDate,
           );
+      ref.invalidate(goalsListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());

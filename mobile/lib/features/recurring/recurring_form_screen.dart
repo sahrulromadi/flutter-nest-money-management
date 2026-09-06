@@ -81,6 +81,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                 : null,
             startDate: _startDate,
           );
+      ref.invalidate(recurringRulesListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());

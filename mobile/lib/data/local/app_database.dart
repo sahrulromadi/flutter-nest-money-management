@@ -50,11 +50,31 @@ const _secureStorage = FlutterSecureStorage();
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // APK masih fase development — tiap perubahan schema = uninstall + install
-  // ulang (fresh `onCreate`). Belum ada `MigrationStrategy`; ditambah nanti pas
-  // ada rilis beneran yang datanya perlu dijaga.
+  // APK masih fase development. Naikin `schemaVersion` tiap ubah struktur tabel
+  // → `onUpgrade` DROP semua + createAll (data lokal ke-reset, ga perlu
+  // uninstall manual). Migrasi stepwise beneran ditambah pas rilis.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          for (final t in [
+            'budgets',
+            'periods',
+            'budget_periods',
+            'transactions',
+            'recurring_rules',
+            'goals',
+            'categories',
+            'accounts',
+          ]) {
+            await m.database.customStatement('DROP TABLE IF EXISTS $t');
+          }
+          await m.createAll();
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(() async {
