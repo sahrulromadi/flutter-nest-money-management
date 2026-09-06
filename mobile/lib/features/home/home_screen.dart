@@ -163,7 +163,11 @@ class _ScoreboardHeader extends ConsumerWidget {
                           ?.copyWith(color: Colors.white),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(
+                    height: 26,
+                    child: FlyingCrow(),
+                  ),
+                  const SizedBox(height: 12),
                   snapshotAsync.maybeWhen(
                     data: (s) => Row(
                       children: [

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Motif visual bertema Karasuno (Haikyuu!!) — gagak, bulu, garis lapangan voli.
@@ -65,6 +67,101 @@ class _CrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CrowPainter old) => old.color != color;
+}
+
+/// Gagak yang meluncur nyebrang lebar parent-nya, loop terus, sambil ngepak
+/// & naik-turun halus. Zero asset (CustomPainter). Buat header Home.
+class FlyingCrow extends StatefulWidget {
+  const FlyingCrow({
+    super.key,
+    this.color,
+    this.size = 22,
+    this.duration = const Duration(seconds: 9),
+  });
+
+  final Color? color;
+  final double size;
+  final Duration duration;
+
+  @override
+  State<FlyingCrow> createState() => _FlyingCrowState();
+}
+
+class _FlyingCrowState extends State<FlyingCrow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: widget.duration)..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.color ??
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.5);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        return AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) {
+            final t = _c.value; // 0..1 posisi horizontal
+            final x = -widget.size + t * (w + widget.size * 2);
+            final bob = math.sin(t * math.pi * 6) * 3; // naik-turun
+            final flap = (math.sin(t * math.pi * 18) * 0.5 + 0.5); // 0..1 kepak
+            return Stack(
+              children: [
+                Positioned(
+                  left: x,
+                  top: (constraints.maxHeight - widget.size) / 2 + bob,
+                  child: CustomPaint(
+                    size: Size.square(widget.size),
+                    painter: _FlyingCrowPainter(color, flap),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FlyingCrowPainter extends CustomPainter {
+  _FlyingCrowPainter(this.color, this.flap);
+  final Color color;
+  final double flap; // 0 = sayap turun, 1 = sayap naik
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final w = size.width, h = size.height;
+    // sudut sayap: -0.35 (turun) .. 0.35 (naik)
+    final a = (flap - 0.5) * 0.7;
+
+    final path = Path()
+      ..moveTo(w * 0.5, h * 0.55) // badan tengah
+      // sayap kiri
+      ..quadraticBezierTo(
+          w * 0.25, h * (0.55 - a), w * 0.02, h * (0.5 - a * 1.6))
+      ..quadraticBezierTo(w * 0.28, h * 0.6, w * 0.5, h * 0.62)
+      // sayap kanan
+      ..quadraticBezierTo(
+          w * 0.75, h * (0.55 - a), w * 0.98, h * (0.5 - a * 1.6))
+      ..quadraticBezierTo(w * 0.72, h * 0.6, w * 0.5, h * 0.55)
+      ..close();
+    canvas.drawPath(path, p);
+  }
+
+  @override
+  bool shouldRepaint(_FlyingCrowPainter old) =>
+      old.flap != flap || old.color != color;
 }
 
 /// Motif bulu/sayap samar — buat background header.
