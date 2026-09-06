@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Palet kategorikal buat chart (breakdown kategori, dll) — dari skill
 /// `dataviz`, dipake apa adanya (bukan warna tema Karasuno; identity warna
-/// kategori beda urusan dari UI chrome, lihat docs/DESIGN.md §1). Urutan
+/// kategori beda urusan dari UI chrome, lihat docs/DESIGN.md #1). Urutan
 /// slot itu sendiri bagian dari mekanisme CVD-safety-nya — jangan diacak.
 abstract final class ChartColors {
   static const categoricalLight = [

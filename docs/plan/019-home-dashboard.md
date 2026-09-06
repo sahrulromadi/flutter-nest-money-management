@@ -1,7 +1,7 @@
 # 019 — Home / Dashboard Screen
 
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
-Sumber: DESIGN.md §6 (layout Home)
+Sumber: DESIGN.md #6 (layout Home)
 
 ## Context
 Layar pertama yang keliatan tiap buka app. Agregasi dari data yang udah ada (accounts + transactions, plan 016 & 018) — gak ada data/tabel baru.
@@ -9,7 +9,7 @@ Layar pertama yang keliatan tiap buka app. Agregasi dari data yang udah ada (acc
 ## Scope
 1. `lib/features/home/home_screen.dart`:
    - Total saldo (SUM semua akun) — angka gede paling menonjol
-   - Snapshot periode ini: total income vs expense (default: bulan berjalan, krn budget period custom baru masuk plan 021) — 2 angka bersebelahan, warna sesuai semantic color (DESIGN.md §4)
+   - Snapshot periode ini: total income vs expense (default: bulan berjalan, krn budget period custom baru masuk plan 021) — 2 angka bersebelahan, warna sesuai semantic color (DESIGN.md #4)
    - 5 transaksi terakhir (reuse widget row dari plan 018) + link "Lihat semua" → tab Transactions
    - Empty state kalau belum ada transaksi sama sekali ("Belum ada transaksi, yuk catat yang pertama" + tombol ke form tambah)
 2. `lib/features/home/home_providers.dart` — Riverpod provider gabungin total saldo + snapshot dari repository accounts & transactions yang udah ada

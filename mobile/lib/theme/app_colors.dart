@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Token warna tema Karasuno (Haikyuu!!) — lihat docs/DESIGN.md §2-4.
+/// Token warna tema Karasuno (Haikyuu!!) — lihat docs/DESIGN.md #2-4.
 abstract final class AppColors {
   // Light mode
   static const lightPrimary = Color(0xFFF2620D);
@@ -22,7 +22,7 @@ abstract final class AppColors {
   static const darkOnSurface = Color(0xFFF5F5F3);
   static const darkOutline = Color(0xFF3A3A3D);
 
-  // Semantik (§4) — sama di light & dark kecuali kontras
+  // Semantik (#4) — sama di light & dark kecuali kontras
   static const lightIncome = Color(0xFF12A150);
   static const darkIncome = Color(0xFF34D399);
   static const lightExpense = Color(0xFFE5484D);

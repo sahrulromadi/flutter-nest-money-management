@@ -1,7 +1,7 @@
 # 023 — Reminders (Local Notification)
 
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
-Sumber: PRD.md §5 Rilis 3, backend plan 011 (`/reminders/*`)
+Sumber: PRD.md #5 Rilis 3, backend plan 011 (`/reminders/*`)
 
 ## Context
 Backend cuma nyediain data (plan 011) — mekanisme notifikasi diputusin di sini: **local notification** yang dijadwalin dari data backend, bukan push/FCM (sesuai keputusan di plan 011, cukup buat v1 solo-user).

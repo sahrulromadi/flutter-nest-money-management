@@ -70,4 +70,4 @@ Belum ada Settings screen (DESIGN.md nyebut ada, tapi cuma logout + reminder tog
 8. `--dart-define=API_BASE_URL=...` pas ga ada URL tersimpan → dipakai sbg default
 
 ## Next
-Revisi `docs/TECH_STACK.md` §5 (hosting) — VPS/Caddy jadi opsional/backlog, default: backend jalan di laptop, akses LAN. (Plan/PR terpisah, doc-only.)
+Revisi `docs/TECH_STACK.md` #5 (hosting) — VPS/Caddy jadi opsional/backlog, default: backend jalan di laptop, akses LAN. (Plan/PR terpisah, doc-only.)

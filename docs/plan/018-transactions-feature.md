@@ -1,10 +1,10 @@
 # 018 — Transactions Feature
 
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
-Sumber: SCHEMA.md (`transactions`), DESIGN.md §6 (Transactions screen, Add Transaction screen)
+Sumber: SCHEMA.md (`transactions`), DESIGN.md #6 (Transactions screen, Add Transaction screen)
 
 ## Context
-Fitur inti — layout & interaksi udah didetailin di `DESIGN.md` §6 (segmented toggle, numpad custom, swipe delete, dll). Balance akun (plan 016) otomatis reaktif ke perubahan di sini krn sama-sama baca dari local DB yang sama.
+Fitur inti — layout & interaksi udah didetailin di `DESIGN.md` #6 (segmented toggle, numpad custom, swipe delete, dll). Balance akun (plan 016) otomatis reaktif ke perubahan di sini krn sama-sama baca dari local DB yang sama.
 
 ## Scope
 1. `lib/data/repository/transactions_repository.dart` — wrap `TransactionsDao`, dirty-tracking, plus query balance on-the-fly per akun (mirror logic SQL backend plan 003, versi Drift/SQL lokal)

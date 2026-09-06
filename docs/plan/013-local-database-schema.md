@@ -1,6 +1,6 @@
 # 013 — Local Database Schema (Drift)
 
-Status: Kode ditulis, belum diverifikasi (nunggu SDK Flutter siap — lihat §Verification)
+Status: Kode ditulis, belum diverifikasi (nunggu SDK Flutter siap — lihat #Verification)
 Sumber: SCHEMA.md (skema jadi acuan, mirror persis), TECH_STACK.md #2 (Drift + SQLCipher)
 
 ## Context

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Scaffold bottom nav 4 tab + FAB tengah (docked) — sesuai DESIGN.md §6.
+/// Scaffold bottom nav 4 tab + FAB tengah (docked) — sesuai DESIGN.md #6.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
 

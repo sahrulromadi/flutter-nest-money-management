@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 /// Warna semantik keuangan (income/expense/warning/danger) — tetap universal,
-/// gak ikut tema, biar gak ambigu (docs/DESIGN.md §1).
+/// gak ikut tema, biar gak ambigu (docs/DESIGN.md #1).
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   const AppSemanticColors({

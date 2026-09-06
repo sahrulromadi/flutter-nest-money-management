@@ -1,7 +1,7 @@
 # 020 — Sync Engine
 
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
-Sumber: TECH_STACK.md §6 (sync strategy), backend plan 006 (`/sync/push`, `/sync/pull`)
+Sumber: TECH_STACK.md #6 (sync strategy), backend plan 006 (`/sync/push`, `/sync/pull`)
 
 ## Context
 Penutup Rilis 1 mobile — hubungin local DB (Drift) ke backend biar data gak ilang kalau ganti device. Timestamp-based, last-write-wins (sama kayak backend).

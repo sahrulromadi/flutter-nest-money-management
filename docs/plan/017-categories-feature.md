@@ -1,7 +1,7 @@
 # 017 — Categories Feature
 
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
-Sumber: SCHEMA.md (`categories`), DESIGN.md §6 (More → Categories)
+Sumber: SCHEMA.md (`categories`), DESIGN.md #6 (More → Categories)
 
 ## Context
 CRUD kategori di mobile, pola sama persis kayak accounts (plan 016) — local-first, dirty-tracking buat sync. Gak ada kategori bawaan (dikonfirmasi user), jadi first-run kategori kosong & user diarahin bikin sendiri.

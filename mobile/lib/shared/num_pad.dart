@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Numpad custom buat input nominal transaksi (bukan keyboard qwerty —
-/// DESIGN.md §6 "Add Transaction").
+/// DESIGN.md #6 "Add Transaction").
 class NumPad extends StatelessWidget {
   const NumPad({super.key, required this.onDigit, required this.onBackspace});
 

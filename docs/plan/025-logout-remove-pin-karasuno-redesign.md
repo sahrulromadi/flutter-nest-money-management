@@ -69,7 +69,7 @@ User mutusin PIN/biometric lock (PRD Rilis 1 #4) **dibuang total**. Alasan: sing
 ## BAGIAN C — Redesign Visual: Nuansa Karasuno / Voli / Gagak
 
 ### Context
-Palette hitam-oranye Karasuno udah ada (`theme/app_colors.dart`, DESIGN.md §2-4) tapi penerapannya masih "Material default rasa oranye" — belum berasa Haikyuu. Target: identitas visual yang kerasa gagak/voli TANPA ngorbanin kejelasan angka duit (warna semantik income/expense TETAP hijau/merah universal, ga diganggu — DESIGN.md §1).
+Palette hitam-oranye Karasuno udah ada (`theme/app_colors.dart`, DESIGN.md #2-4) tapi penerapannya masih "Material default rasa oranye" — belum berasa Haikyuu. Target: identitas visual yang kerasa gagak/voli TANPA ngorbanin kejelasan angka duit (warna semantik income/expense TETAP hijau/merah universal, ga diganggu — DESIGN.md #1).
 
 ### Prinsip
 - Tema Karasuno buat **chrome & aksen**: app bar, FAB, header, empty state, splash/login, kartu, divider
@@ -156,7 +156,7 @@ Header = area atas tiap layar (app bar + baris pertama konten). Sekarang app bar
 
 ### Out of Scope (C)
 - Animasi kompleks (gagak terbang animated, parallax) — v2 kalau sempat
-- Ganti struktur navigasi / IA (tetap 4 tab + FAB, DESIGN.md §6)
+- Ganti struktur navigasi / IA (tetap 4 tab + FAB, DESIGN.md #6)
 - Ubah warna semantik keuangan (hijau/merah/amber) — HARAM diganggu
 - Dark/light: dua-duanya tetap didukung, redesign kena dua-duanya
 

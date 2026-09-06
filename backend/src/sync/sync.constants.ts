@@ -32,6 +32,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
       'parent_id',
       'icon',
       'color',
+      'sort_order',
       'created_at',
       'updated_at',
       'deleted_at',

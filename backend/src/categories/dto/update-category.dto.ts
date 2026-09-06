@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class UpdateCategoryDto {
   @ApiPropertyOptional()
@@ -17,4 +17,10 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsString()
   color?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 }

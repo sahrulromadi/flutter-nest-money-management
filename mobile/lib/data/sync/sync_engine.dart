@@ -103,7 +103,7 @@ class SyncEngine {
   }
 
   /// Push dulu baru pull — perubahan lokal harus kekirim sebelum narik
-  /// perubahan lain (TECH_STACK.md §6).
+  /// perubahan lain (TECH_STACK.md #6).
   Future<void> syncAll() async {
     await push();
     await pull();
