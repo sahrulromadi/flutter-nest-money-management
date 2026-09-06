@@ -6,7 +6,6 @@ export interface Account {
   id: string;
   user_id: string;
   name: string;
-  type: 'Bank' | 'Ewallet' | 'Cash';
   initial_balance: string;
   currency: string;
   created_at: Date;
@@ -20,12 +19,12 @@ export class AccountsRepository {
 
   async create(
     userId: string,
-    data: { name: string; type: string; initialBalance: number },
+    data: { name: string; initialBalance: number },
   ): Promise<Account> {
     const result = await this.pool.query<Account>(
-      `INSERT INTO accounts (user_id, name, type, initial_balance)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [userId, data.name, data.type, data.initialBalance],
+      `INSERT INTO accounts (user_id, name, initial_balance)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [userId, data.name, data.initialBalance],
     );
     return result.rows[0];
   }
@@ -49,16 +48,15 @@ export class AccountsRepository {
   async update(
     id: string,
     userId: string,
-    data: { name?: string; type?: string },
+    data: { name?: string },
   ): Promise<Account | null> {
     const result = await this.pool.query<Account>(
       `UPDATE accounts SET
          name = COALESCE($3, name),
-         type = COALESCE($4, type),
          updated_at = now()
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
        RETURNING *`,
-      [id, userId, data.name ?? null, data.type ?? null],
+      [id, userId, data.name ?? null],
     );
     return result.rows[0] ?? null;
   }
