@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app/router.dart';
-import 'features/auth/auth_controller.dart';
-import 'features/auth/auth_state.dart';
 import 'features/recurring/recurring_providers.dart';
 import 'features/reminders/reminder_scheduler.dart';
 import 'theme/app_theme.dart';
@@ -22,17 +20,12 @@ class MoneyManagementApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    // Generate transaksi dari recurring rule yang jatuh tempo — pas app launch,
-    // lokal, gak butuh login. Best-effort, gak nge-block first frame.
+    // Task startup — pas app launch, lokal, gak butuh login. Best-effort,
+    // gak nge-block first frame:
+    // - generate transaksi dari recurring rule yang jatuh tempo
+    // - jadwalin notif reminder tagihan
     ref.watch(recurringStartupProvider);
-
-    // Tiap kali app jadi unlocked (cold start dgn token / abis login), refresh
-    // reminder — best-effort, gak boleh crash app kalau backend gak kejangkau.
-    ref.listen(authControllerProvider, (previous, next) {
-      if (next == AuthPhase.unlocked) {
-        ref.read(reminderSchedulerProvider).refresh().catchError((_) {});
-      }
-    });
+    ref.watch(reminderStartupProvider);
 
     return MaterialApp.router(
       title: 'Money Management',

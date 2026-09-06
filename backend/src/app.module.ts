@@ -13,7 +13,6 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { RecurringRulesModule } from './recurring-rules/recurring-rules.module';
 import { GoalsModule } from './goals/goals.module';
-import { RemindersModule } from './reminders/reminders.module';
 
 @Module({
   imports: [
@@ -30,7 +29,6 @@ import { RemindersModule } from './reminders/reminders.module';
     ReportsModule,
     RecurringRulesModule,
     GoalsModule,
-    RemindersModule,
     HealthModule,
   ],
 })
