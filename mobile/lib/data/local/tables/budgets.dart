@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 class Budgets extends Table {
   TextColumn get id => text()();
-  TextColumn get budgetPeriodId => text().named('budget_period_id')();
+  TextColumn get periodId => text().named('period_id')();
   TextColumn get categoryId => text().named('category_id')();
   RealColumn get limitAmount => real().named('limit_amount')();
   DateTimeColumn get createdAt => dateTime().named('created_at')();

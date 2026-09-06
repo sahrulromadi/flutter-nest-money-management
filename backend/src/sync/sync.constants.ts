@@ -98,7 +98,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
     hasUserIdColumn: true,
   },
   {
-    name: 'budget_periods',
+    name: 'periods',
     columns: [
       'id',
       'user_id',
@@ -115,7 +115,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
     name: 'budgets',
     columns: [
       'id',
-      'budget_period_id',
+      'period_id',
       'category_id',
       'limit_amount',
       'created_at',
@@ -123,7 +123,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
       'deleted_at',
     ],
     userScopeWhere:
-      'budget_period_id IN (SELECT id FROM budget_periods WHERE user_id = $2)',
+      'period_id IN (SELECT id FROM periods WHERE user_id = $2)',
     hasUserIdColumn: false,
   },
 ];

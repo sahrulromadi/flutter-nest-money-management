@@ -168,9 +168,9 @@ TransactionsCompanion transactionFromJson(Map<String, dynamic> j) =>
       pendingSync: const Value(false),
     );
 
-// ---------- budget_periods ----------
+// ---------- periods ----------
 
-Map<String, dynamic> budgetPeriodToJson(BudgetPeriod b) => {
+Map<String, dynamic> periodToJson(Period b) => {
       'id': b.id,
       'user_id': b.userId,
       'started_at': _dateOnly(b.startedAt),
@@ -180,8 +180,8 @@ Map<String, dynamic> budgetPeriodToJson(BudgetPeriod b) => {
       'deleted_at': b.deletedAt == null ? null : _timestamp(b.deletedAt!),
     };
 
-BudgetPeriodsCompanion budgetPeriodFromJson(Map<String, dynamic> j) =>
-    BudgetPeriodsCompanion.insert(
+PeriodsCompanion periodFromJson(Map<String, dynamic> j) =>
+    PeriodsCompanion.insert(
       id: j['id'] as String,
       userId: j['user_id'] as String,
       startedAt: _parseDate(j['started_at'] as String),
@@ -196,7 +196,7 @@ BudgetPeriodsCompanion budgetPeriodFromJson(Map<String, dynamic> j) =>
 
 Map<String, dynamic> budgetToJson(Budget b) => {
       'id': b.id,
-      'budget_period_id': b.budgetPeriodId,
+      'period_id': b.periodId,
       'category_id': b.categoryId,
       'limit_amount': b.limitAmount,
       'created_at': _timestamp(b.createdAt),
@@ -206,7 +206,7 @@ Map<String, dynamic> budgetToJson(Budget b) => {
 
 BudgetsCompanion budgetFromJson(Map<String, dynamic> j) => BudgetsCompanion.insert(
       id: j['id'] as String,
-      budgetPeriodId: j['budget_period_id'] as String,
+      periodId: j['period_id'] as String,
       categoryId: j['category_id'] as String,
       limitAmount: (j['limit_amount'] as num).toDouble(),
       createdAt: _parseDate(j['created_at'] as String),

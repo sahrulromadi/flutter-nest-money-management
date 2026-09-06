@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-class BudgetPeriods extends Table {
+class Periods extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text().named('user_id')();
   DateTimeColumn get startedAt => dateTime().named('started_at')();

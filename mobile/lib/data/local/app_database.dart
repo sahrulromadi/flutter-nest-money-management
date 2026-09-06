@@ -8,14 +8,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import 'daos/accounts_dao.dart';
-import 'daos/budget_periods_dao.dart';
+import 'daos/periods_dao.dart';
 import 'daos/budgets_dao.dart';
 import 'daos/categories_dao.dart';
 import 'daos/goals_dao.dart';
 import 'daos/recurring_rules_dao.dart';
 import 'daos/transactions_dao.dart';
 import 'tables/accounts.dart';
-import 'tables/budget_periods.dart';
+import 'tables/periods.dart';
 import 'tables/budgets.dart';
 import 'tables/categories.dart';
 import 'tables/goals.dart';
@@ -34,7 +34,7 @@ const _secureStorage = FlutterSecureStorage();
     Goals,
     RecurringRules,
     Transactions,
-    BudgetPeriods,
+    Periods,
     Budgets,
   ],
   daos: [
@@ -43,30 +43,18 @@ const _secureStorage = FlutterSecureStorage();
     GoalsDao,
     RecurringRulesDao,
     TransactionsDao,
-    BudgetPeriodsDao,
+    PeriodsDao,
     BudgetsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  // APK masih fase development — tiap perubahan schema = uninstall + install
+  // ulang (fresh `onCreate`). Belum ada `MigrationStrategy`; ditambah nanti pas
+  // ada rilis beneran yang datanya perlu dijaga.
   @override
-  int get schemaVersion => 2;
-
-  @override
-  MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            // Item 1: buang accounts.type. Item 6: buang categories.icon+color.
-            // Item 4: tambah categories.sort_order (default 0).
-            await m.alterTable(TableMigration(accounts));
-            await m.alterTable(
-              TableMigration(categories, newColumns: [categories.sortOrder]),
-            );
-          }
-        },
-      );
+  int get schemaVersion => 1;
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(() async {
@@ -105,8 +93,8 @@ class AppDatabase extends _$AppDatabase {
           .write(RecurringRulesCompanion(userId: owner, pendingSync: dirty));
       await (update(transactions)..where((t) => t.userId.equals(from)))
           .write(TransactionsCompanion(userId: owner, pendingSync: dirty));
-      await (update(budgetPeriods)..where((t) => t.userId.equals(from)))
-          .write(BudgetPeriodsCompanion(userId: owner, pendingSync: dirty));
+      await (update(periods)..where((t) => t.userId.equals(from)))
+          .write(PeriodsCompanion(userId: owner, pendingSync: dirty));
     });
   }
 

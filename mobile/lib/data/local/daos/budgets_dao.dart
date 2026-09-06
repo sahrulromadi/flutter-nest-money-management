@@ -9,10 +9,10 @@ class BudgetsDao extends DatabaseAccessor<AppDatabase>
     with _$BudgetsDaoMixin {
   BudgetsDao(super.db);
 
-  Stream<List<Budget>> watchByPeriod(String budgetPeriodId) {
+  Stream<List<Budget>> watchByPeriod(String periodId) {
     return (select(budgets)
           ..where((t) =>
-              t.budgetPeriodId.equals(budgetPeriodId) & t.deletedAt.isNull()))
+              t.periodId.equals(periodId) & t.deletedAt.isNull()))
         .watch();
   }
 
@@ -20,12 +20,12 @@ class BudgetsDao extends DatabaseAccessor<AppDatabase>
       into(budgets).insertOnConflictUpdate(row);
 
   Future<Budget?> findByPeriodAndCategory(
-    String budgetPeriodId,
+    String periodId,
     String categoryId,
   ) =>
       (select(budgets)
             ..where((t) =>
-                t.budgetPeriodId.equals(budgetPeriodId) &
+                t.periodId.equals(periodId) &
                 t.categoryId.equals(categoryId) &
                 t.deletedAt.isNull()))
           .getSingleOrNull();

@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { BudgetPeriodsRepository } from '../budget-periods/budget-periods.repository';
+import { PeriodsRepository } from '../periods/periods.repository';
 import { ReportsRepository } from './reports.repository';
 
 @Injectable()
 export class ReportsService {
   constructor(
     private readonly reportsRepository: ReportsRepository,
-    private readonly budgetPeriodsRepository: BudgetPeriodsRepository,
+    private readonly periodsRepository: PeriodsRepository,
   ) {}
 
   async summary(userId: string, from?: string, to?: string) {
@@ -55,12 +55,12 @@ export class ReportsService {
     if (from && to) {
       return { from, to };
     }
-    const active = await this.budgetPeriodsRepository.findActiveByUser(
+    const active = await this.periodsRepository.findActiveByUser(
       userId,
     );
     if (!active) {
       throw new NotFoundException(
-        'Belum ada periode budget aktif, kasih from/to manual',
+        'Belum ada periode aktif, kasih from/to manual',
       );
     }
     return {

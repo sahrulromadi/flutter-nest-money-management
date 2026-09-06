@@ -48,7 +48,7 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
     });
     try {
       final periodId = widget.periodId ??
-          ref.read(activeBudgetPeriodProvider).valueOrNull?.id;
+          ref.read(activePeriodProvider).valueOrNull?.id;
       if (periodId == null) {
         setState(() => _error = 'Belum ada periode budget aktif');
         return;

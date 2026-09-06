@@ -7,11 +7,11 @@ import '../auth/current_user_provider.dart';
 
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return BudgetRepository(db.budgetPeriodsDao, db.budgetsDao, db.transactionsDao);
+  return BudgetRepository(db.periodsDao, db.budgetsDao, db.transactionsDao);
 });
 
-final activeBudgetPeriodProvider =
-    StreamProvider.autoDispose<BudgetPeriod?>((ref) async* {
+final activePeriodProvider =
+    StreamProvider.autoDispose<Period?>((ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
   if (userId == null) {
     yield null;
@@ -26,7 +26,7 @@ typedef ReportRange = ({DateTime from, DateTime to});
 final reportRangeProvider = Provider.autoDispose<ReportRange>((ref) {
   final now = DateTime.now();
   final to = DateTime(now.year, now.month, now.day);
-  final period = ref.watch(activeBudgetPeriodProvider).valueOrNull;
+  final period = ref.watch(activePeriodProvider).valueOrNull;
   final from = period != null
       ? DateTime(period.startedAt.year, period.startedAt.month,
           period.startedAt.day)
@@ -82,7 +82,7 @@ typedef BudgetProgress = ({Budget budget, double spent, int pct});
 final budgetsWithProgressProvider =
     StreamProvider.autoDispose<List<BudgetProgress>>((ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
-  final period = ref.watch(activeBudgetPeriodProvider).valueOrNull;
+  final period = ref.watch(activePeriodProvider).valueOrNull;
   if (userId == null || period == null) {
     yield const [];
     return;

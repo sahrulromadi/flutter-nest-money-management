@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BudgetPeriodsRepository } from '../budget-periods/budget-periods.repository';
+import { PeriodsRepository } from '../periods/periods.repository';
 import { CategoriesRepository } from '../categories/categories.repository';
 import { BudgetsRepository } from './budgets.repository';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -17,7 +17,7 @@ function isPgError(error: unknown): error is PgError {
 export class BudgetsService {
   constructor(
     private readonly budgetsRepository: BudgetsRepository,
-    private readonly budgetPeriodsRepository: BudgetPeriodsRepository,
+    private readonly periodsRepository: PeriodsRepository,
     private readonly categoriesRepository: CategoriesRepository,
   ) {}
 
@@ -88,20 +88,20 @@ export class BudgetsService {
 
   private async resolvePeriod(userId: string, periodId: string | undefined) {
     if (periodId) {
-      const period = await this.budgetPeriodsRepository.findByIdAndUser(
+      const period = await this.periodsRepository.findByIdAndUser(
         periodId,
         userId,
       );
       if (!period) {
-        throw new NotFoundException('Periode budget tidak ditemukan');
+        throw new NotFoundException('Periode tidak ditemukan');
       }
       return period;
     }
-    const active = await this.budgetPeriodsRepository.findActiveByUser(
+    const active = await this.periodsRepository.findActiveByUser(
       userId,
     );
     if (!active) {
-      throw new NotFoundException('Belum ada periode budget aktif');
+      throw new NotFoundException('Belum ada periode aktif');
     }
     return active;
   }

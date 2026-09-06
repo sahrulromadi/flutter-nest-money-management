@@ -2,18 +2,18 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
-import '../local/daos/budget_periods_dao.dart';
+import '../local/daos/periods_dao.dart';
 import '../local/daos/budgets_dao.dart';
 import '../local/daos/transactions_dao.dart';
 
 class BudgetRepository {
   BudgetRepository(this._periodsDao, this._budgetsDao, this._txnDao);
 
-  final BudgetPeriodsDao _periodsDao;
+  final PeriodsDao _periodsDao;
   final BudgetsDao _budgetsDao;
   final TransactionsDao _txnDao;
 
-  Stream<BudgetPeriod?> watchActivePeriod(String userId) =>
+  Stream<Period?> watchActivePeriod(String userId) =>
       _periodsDao.watchActive(userId);
 
   Stream<List<Budget>> watchBudgets(String periodId) =>
@@ -31,7 +31,7 @@ class BudgetRepository {
     if (active != null) {
       await _periodsDao.updateFields(
         active.id,
-        BudgetPeriodsCompanion(
+        PeriodsCompanion(
           endedAt: Value(start.subtract(const Duration(days: 1))),
           updatedAt: Value(now),
           pendingSync: const Value(true),
@@ -39,7 +39,7 @@ class BudgetRepository {
       );
     }
     await _periodsDao.upsert(
-      BudgetPeriodsCompanion.insert(
+      PeriodsCompanion.insert(
         id: const Uuid().v4(),
         userId: userId,
         startedAt: start,
@@ -71,7 +71,7 @@ class BudgetRepository {
       await _budgetsDao.upsert(
         BudgetsCompanion.insert(
           id: const Uuid().v4(),
-          budgetPeriodId: periodId,
+          periodId: periodId,
           categoryId: categoryId,
           limitAmount: limitAmount,
           createdAt: now,

@@ -4,7 +4,7 @@ import { PG_POOL } from '../database/database.constants';
 
 export interface Budget {
   id: string;
-  budget_period_id: string;
+  period_id: string;
   category_id: string;
   limit_amount: string;
   created_at: Date;
@@ -17,33 +17,33 @@ export class BudgetsRepository {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
   async create(
-    budgetPeriodId: string,
+    periodId: string,
     categoryId: string,
     limitAmount: number,
   ): Promise<Budget> {
     const result = await this.pool.query<Budget>(
-      `INSERT INTO budgets (budget_period_id, category_id, limit_amount)
+      `INSERT INTO budgets (period_id, category_id, limit_amount)
        VALUES ($1, $2, $3) RETURNING *`,
-      [budgetPeriodId, categoryId, limitAmount],
+      [periodId, categoryId, limitAmount],
     );
     return result.rows[0];
   }
 
-  async findAllByPeriod(budgetPeriodId: string): Promise<Budget[]> {
+  async findAllByPeriod(periodId: string): Promise<Budget[]> {
     const result = await this.pool.query<Budget>(
-      `SELECT * FROM budgets WHERE budget_period_id = $1 AND deleted_at IS NULL`,
-      [budgetPeriodId],
+      `SELECT * FROM budgets WHERE period_id = $1 AND deleted_at IS NULL`,
+      [periodId],
     );
     return result.rows;
   }
 
   async findByIdInPeriod(
     id: string,
-    budgetPeriodId: string,
+    periodId: string,
   ): Promise<Budget | null> {
     const result = await this.pool.query<Budget>(
-      `SELECT * FROM budgets WHERE id = $1 AND budget_period_id = $2 AND deleted_at IS NULL`,
-      [id, budgetPeriodId],
+      `SELECT * FROM budgets WHERE id = $1 AND period_id = $2 AND deleted_at IS NULL`,
+      [id, periodId],
     );
     return result.rows[0] ?? null;
   }
@@ -70,7 +70,7 @@ export class BudgetsRepository {
     const result = await this.pool.query<{ spent: string }>(
       `SELECT COALESCE(SUM(t.amount), 0) AS spent
        FROM budgets b
-       JOIN budget_periods bp ON bp.id = b.budget_period_id
+       JOIN periods bp ON bp.id = b.period_id
        JOIN transactions t
          ON t.category_id = b.category_id
          AND t.type = 'Expense'

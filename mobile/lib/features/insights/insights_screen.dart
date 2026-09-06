@@ -19,7 +19,7 @@ class InsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activePeriodAsync = ref.watch(activeBudgetPeriodProvider);
+    final activePeriodAsync = ref.watch(activePeriodProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Insights')),
@@ -35,7 +35,7 @@ class InsightsScreen extends ConsumerWidget {
           ],
         ),
         error: (e, _) => AppErrorState(
-          onRetry: () => ref.invalidate(activeBudgetPeriodProvider),
+          onRetry: () => ref.invalidate(activePeriodProvider),
         ),
         data: (period) {
           return ListView(

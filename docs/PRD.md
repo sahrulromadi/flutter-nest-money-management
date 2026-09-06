@@ -31,8 +31,8 @@ Mobile (Android/iOS). Data local-first (SQLite di device) + sync ke backend clou
 - **Account (Dompet)**: id, nama, tipe (bank/e-wallet/cash), saldo awal, saldo berjalan (calculated), currency (IDR fixed v1)
 - **Category**: id, nama, tipe (income/expense), parent_id (nullable, buat subkategori), icon/warna, is_custom (bool)
 - **Transaction**: id, account_id, category_id, tipe (income/expense/transfer), nominal, tanggal, catatan, is_recurring_generated (bool)
-- **BudgetPeriod**: id, tanggal_mulai, tanggal_selesai (nullable — null berarti periode aktif berjalan), dibuat manual oleh user saat gajian cair
-- **Budget**: id, budget_period_id, category_id, limit_nominal
+- **Period**: id, tanggal_mulai, tanggal_selesai (nullable — null berarti periode aktif berjalan), dibuat manual oleh user saat gajian cair. Nge-scope semua laporan periode itu.
+- **Budget**: id, period_id, category_id, limit_nominal
 - **RecurringRule**: id, template transaksi (account, category, nominal, catatan), interval (harian/mingguan/bulanan/custom hari), tanggal_mulai, tanggal_berikutnya
 - **Goal**: id, nama, target_nominal, saldo_terkumpul, tenggat (nullable), account_id terkait (opsional, kalau nabung di akun spesifik)
 

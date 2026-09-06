@@ -52,23 +52,23 @@ Gak ada kategori bawaan/predefined — semua kategori dibuat manual oleh user. D
 
 Transfer = **1 row** (bukan 2 row terpisah) → gak perlu exclude manual di laporan income/expense per kategori, karena category_id NULL & type=transfer otomatis di-skip dari breakdown kategori.
 
-## budget_periods
+## periods
 | Kolom | Tipe | Ket |
 |---|---|---|
 | user_id | UUID FK → users | |
 | started_at | DATE | |
 | ended_at | DATE NULL | NULL = periode aktif |
 
-Dibuat manual oleh user tiap gajian cair (PRD #5 Rilis 2). Periode sebelumnya di-set `ended_at` otomatis saat periode baru dibuat.
+Dibuat manual oleh user tiap gajian cair (PRD #5 Rilis 2). Periode sebelumnya di-set `ended_at` otomatis saat periode baru dibuat. Periode nge-scope **semua** laporan (income/expense/breakdown/cashflow), bukan cuma budget — transaksi "masuk" periode kalau `occurred_at` di rentang `started_at .. (ended_at ?? hari ini)`. (rename dari `budget_periods` di plan 030)
 
 ## budgets
 | Kolom | Tipe | Ket |
 |---|---|---|
-| budget_period_id | UUID FK → budget_periods | |
+| period_id | UUID FK → periods | |
 | category_id | UUID FK → categories | |
 | limit_amount | NUMERIC(18,2) | |
 
-Unique constraint: `(budget_period_id, category_id)`.
+Unique constraint: `(period_id, category_id)`. (`budget_period_id` di-rename jadi `period_id` di plan 030)
 
 ## recurring_rules
 | Kolom | Tipe | Ket |

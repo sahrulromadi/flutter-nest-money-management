@@ -39,9 +39,9 @@ class SyncEngine {
       changes['transactions'] = transactions.map(transactionToJson).toList();
     }
 
-    final periods = await _db.budgetPeriodsDao.findPendingSync();
+    final periods = await _db.periodsDao.findPendingSync();
     if (periods.isNotEmpty) {
-      changes['budget_periods'] = periods.map(budgetPeriodToJson).toList();
+      changes['periods'] = periods.map(periodToJson).toList();
     }
 
     final budgets = await _db.budgetsDao.findPendingSync();
@@ -66,7 +66,7 @@ class SyncEngine {
       await _db.transactionsDao.clearPendingSync(t.id);
     }
     for (final p in periods) {
-      await _db.budgetPeriodsDao.clearPendingSync(p.id);
+      await _db.periodsDao.clearPendingSync(p.id);
     }
     for (final b in budgets) {
       await _db.budgetsDao.clearPendingSync(b.id);
@@ -92,8 +92,8 @@ class SyncEngine {
     for (final row in result['transactions'] ?? const []) {
       await _db.transactionsDao.upsert(transactionFromJson(row));
     }
-    for (final row in result['budget_periods'] ?? const []) {
-      await _db.budgetPeriodsDao.upsert(budgetPeriodFromJson(row));
+    for (final row in result['periods'] ?? const []) {
+      await _db.periodsDao.upsert(periodFromJson(row));
     }
     for (final row in result['budgets'] ?? const []) {
       await _db.budgetsDao.upsert(budgetFromJson(row));

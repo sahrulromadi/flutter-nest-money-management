@@ -8,7 +8,7 @@ import { AccountsModule } from './accounts/accounts.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { SyncModule } from './sync/sync.module';
-import { BudgetPeriodsModule } from './budget-periods/budget-periods.module';
+import { PeriodsModule } from './periods/periods.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { RecurringRulesModule } from './recurring-rules/recurring-rules.module';
@@ -24,7 +24,7 @@ import { GoalsModule } from './goals/goals.module';
     CategoriesModule,
     TransactionsModule,
     SyncModule,
-    BudgetPeriodsModule,
+    PeriodsModule,
     BudgetsModule,
     ReportsModule,
     RecurringRulesModule,

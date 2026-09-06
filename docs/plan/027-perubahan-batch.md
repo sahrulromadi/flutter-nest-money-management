@@ -1,6 +1,10 @@
 # 027 — Perubahan & Penambahan Fitur (Batch)
 
 Status: **DIKERJAKAN** (2026-09-06) — semua 6 item selesai di branch `development`.
+> Catatan (plan 030/031): APK masuk fase dev, tiap ubah schema = uninstall + install ulang.
+> `MigrationStrategy` Drift yang ditambah di plan ini **dihapus lagi** (`schemaVersion` balik ke 1).
+> Migrasi Drift beneran ditambah nanti pas ada rilis yang datanya perlu dijaga. Migrasi
+> **backend** (Postgres) tetap ada.
 Sumber: permintaan user — beberapa perubahan sekaligus di atas APK yang udah live + data ke-sync ke Postgres
 
 ## Progress
