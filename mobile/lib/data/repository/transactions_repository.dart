@@ -100,6 +100,33 @@ class TransactionsRepository {
 
   Future<void> delete(String id) => _dao.softDelete(id, DateTime.now().toUtc());
 
+  /// Transaksi turunan tanpa kategori (penyesuaian saldo, biaya transfer, dst).
+  /// Skip [_validate] — `category_id` sengaja NULL, akun dijamin ada dari caller.
+  Future<void> createUncategorized({
+    required String userId,
+    required String accountId,
+    required String type, // 'Income' | 'Expense'
+    required double amount,
+    required DateTime occurredAt,
+    required String note,
+  }) async {
+    final now = DateTime.now().toUtc();
+    await _dao.upsert(
+      TransactionsCompanion.insert(
+        id: const Uuid().v4(),
+        userId: userId,
+        accountId: accountId,
+        categoryId: const Value(null),
+        type: type,
+        amount: amount,
+        occurredAt: occurredAt,
+        note: Value(note),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
   Future<void> _validate({
     required String accountId,
     required String type,

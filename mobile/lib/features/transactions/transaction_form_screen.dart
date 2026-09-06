@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/currency_formatter.dart';
+import '../../shared/money_field.dart';
 import '../../shared/num_pad.dart';
 import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
@@ -32,6 +33,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   String? _goalId;
   DateTime _occurredAt = DateTime.now();
   final _noteController = TextEditingController();
+  final _feeController = TextEditingController(); // biaya admin transfer (plan 028 Item 2)
   bool _saving = false;
   String? _error;
   bool _loadedExisting = false;
@@ -47,6 +49,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   @override
   void dispose() {
     _noteController.dispose();
+    _feeController.dispose();
     super.dispose();
   }
 
@@ -127,6 +130,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           note: note,
           goalId: _goalId,
         );
+
+        // Biaya admin transfer -> Expense turunan di akun asal (plan 028 Item 2).
+        final fee = _type == 'Transfer'
+            ? moneyValue(_feeController.text).toDouble()
+            : 0.0;
+        if (fee > 0) {
+          await repo.createUncategorized(
+            userId: userId,
+            accountId: _accountId!,
+            type: 'Expense',
+            amount: fee,
+            occurredAt: _occurredAt,
+            note: 'Biaya transfer',
+          );
+        }
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -213,6 +231,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   }).toList(),
                 ),
               ),
+              if (!_isEdit) ...[
+                const SizedBox(height: 16),
+                MoneyField(
+                  controller: _feeController,
+                  label: 'Biaya admin (opsional)',
+                  validator: (_) => null,
+                ),
+              ],
             ] else ...[
               const SizedBox(height: 16),
               Text('Kategori', style: Theme.of(context).textTheme.labelLarge),
