@@ -80,6 +80,99 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     return q.watchSingle().map((r) => r.read(transactions.amount.sum()) ?? 0);
   }
 
+  // ---------- laporan / budget (plan 029 Item 3, ganti /reports/*) ----------
+
+  /// SUM Expense untuk 1 kategori dalam rentang tanggal — reaktif. Progress budget.
+  Stream<double> watchExpenseForCategory(
+    String categoryId,
+    DateTime from,
+    DateTime to,
+  ) {
+    final q = selectOnly(transactions)
+      ..addColumns([transactions.amount.sum()])
+      ..where(transactions.type.equals('Expense') &
+          transactions.categoryId.equals(categoryId) &
+          transactions.deletedAt.isNull() &
+          transactions.occurredAt.isBetweenValues(from, to));
+    return q.watchSingle().map((r) => r.read(transactions.amount.sum()) ?? 0);
+  }
+
+  /// Total income vs expense dalam rentang — reaktif.
+  Stream<({double income, double expense})> watchSummary(
+    String userId,
+    DateTime from,
+    DateTime to,
+  ) {
+    final q = select(transactions)
+      ..where((t) =>
+          t.userId.equals(userId) &
+          t.deletedAt.isNull() &
+          t.occurredAt.isBetweenValues(from, to));
+    return q.watch().map((rows) {
+      var income = 0.0, expense = 0.0;
+      for (final t in rows) {
+        if (t.type == 'Income') income += t.amount;
+        if (t.type == 'Expense') expense += t.amount;
+      }
+      return (income: income, expense: expense);
+    });
+  }
+
+  /// Breakdown Expense per kategori (kategori NULL di-skip) dalam rentang — reaktif.
+  Stream<List<({String categoryId, double total})>> watchCategoryBreakdown(
+    String userId,
+    DateTime from,
+    DateTime to,
+  ) {
+    final q = select(transactions)
+      ..where((t) =>
+          t.userId.equals(userId) &
+          t.deletedAt.isNull() &
+          t.type.equals('Expense') &
+          t.categoryId.isNotNull() &
+          t.occurredAt.isBetweenValues(from, to));
+    return q.watch().map((rows) {
+      final byCat = <String, double>{};
+      for (final t in rows) {
+        byCat.update(t.categoryId!, (v) => v + t.amount,
+            ifAbsent: () => t.amount);
+      }
+      return byCat.entries
+          .map((e) => (categoryId: e.key, total: e.value))
+          .toList()
+        ..sort((a, b) => b.total.compareTo(a.total));
+    });
+  }
+
+  /// Cashflow harian (income vs expense) dalam rentang — reaktif.
+  Stream<List<({DateTime day, double income, double expense})>>
+      watchCashflowTrend(String userId, DateTime from, DateTime to) {
+    final q = select(transactions)
+      ..where((t) =>
+          t.userId.equals(userId) &
+          t.deletedAt.isNull() &
+          t.occurredAt.isBetweenValues(from, to))
+      ..orderBy([(t) => OrderingTerm.asc(t.occurredAt)]);
+    return q.watch().map((rows) {
+      final byDay = <DateTime, ({double income, double expense})>{};
+      for (final t in rows) {
+        final d =
+            DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day);
+        final cur = byDay[d] ?? (income: 0.0, expense: 0.0);
+        if (t.type == 'Income') {
+          byDay[d] = (income: cur.income + t.amount, expense: cur.expense);
+        } else if (t.type == 'Expense') {
+          byDay[d] = (income: cur.income, expense: cur.expense + t.amount);
+        }
+      }
+      final days = byDay.keys.toList()..sort();
+      return [
+        for (final d in days)
+          (day: d, income: byDay[d]!.income, expense: byDay[d]!.expense),
+      ];
+    });
+  }
+
   /// Jumlah transaksi (belum kehapus) yang pakai kategori ini.
   Future<int> countForCategory(String categoryId) async {
     final q = selectOnly(transactions)

@@ -9,8 +9,7 @@ import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
-import '../auth/auth_controller.dart';
-import '../auth/auth_state.dart';
+import '../auth/current_user_provider.dart';
 import '../categories/categories_providers.dart';
 import 'budget_form_sheet.dart';
 import 'insights_providers.dart';
@@ -20,66 +19,31 @@ class InsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Budget & reports murni backend (belum local-first) — jangan nembak
-    // network kalau belum login, nanti 401 keliatan sbg error yg bingungin.
-    if (ref.watch(authControllerProvider) != AuthPhase.unlocked) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Insights')),
-        body: const AppLoginRequiredState(
-          message: 'Login dulu buat lihat budget & laporan.\n'
-              'Insights disimpen di server, belum ada versi offline-nya.',
-        ),
-      );
-    }
-
     final activePeriodAsync = ref.watch(activeBudgetPeriodProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Insights')),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(activeBudgetPeriodProvider);
-          ref.invalidate(budgetsProvider);
-          ref.invalidate(reportsSummaryProvider);
-          ref.invalidate(categoryBreakdownProvider);
-          ref.invalidate(cashflowTrendProvider);
-        },
-        child: activePeriodAsync.when(
-          loading: () => ListView(
+      body: activePeriodAsync.when(
+        loading: () => ListView(
+          padding: const EdgeInsets.all(16),
+          children: const [
+            Skeleton(width: 220, height: 20),
+            SizedBox(height: 24),
+            Skeleton(height: 40, radius: 4),
+            SizedBox(height: 12),
+            Skeleton(height: 160, radius: 6),
+          ],
+        ),
+        error: (e, _) => AppErrorState(
+          onRetry: () => ref.invalidate(activeBudgetPeriodProvider),
+        ),
+        data: (period) {
+          return ListView(
             padding: const EdgeInsets.all(16),
-            children: const [
-              Skeleton(width: 220, height: 20),
-              SizedBox(height: 24),
-              Skeleton(height: 40, radius: 4),
-              SizedBox(height: 12),
-              Skeleton(height: 160, radius: 6),
-            ],
-          ),
-          error: (e, _) => AppErrorState(
-            onRetry: () => ref.invalidate(activeBudgetPeriodProvider),
-          ),
-          // Laporan (reports API) di-scope ke periode budget aktif. Tanpa
-          // periode aktif, backend `/reports/*` balik 404 by design — jadi
-          // jangan render chart-nya, tampilin ajakan mulai periode.
-          data: (period) {
-            if (period == null) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 40),
-                  AppEmptyState.insights(),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: FilledButton(
-                      onPressed: () => _startNewPeriod(context, ref),
-                      child: const Text('Mulai periode budget'),
-                    ),
-                  ),
-                ],
-              );
-            }
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+            children: [
+              if (period == null)
+                _NoPeriodBudgetCta(onStart: () => _startNewPeriod(context, ref))
+              else ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -109,19 +73,19 @@ class InsightsScreen extends ConsumerWidget {
                 ),
                 const _BudgetList(),
                 const SizedBox(height: 24),
-                Text('Cashflow Trend',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                const _CashflowChart(),
-                const SizedBox(height: 24),
-                Text('Breakdown Pengeluaran',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                const _CategoryBreakdownChart(),
               ],
-            );
-          },
-        ),
+              Text('Cashflow Trend',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const _CashflowChart(),
+              const SizedBox(height: 24),
+              Text('Breakdown Pengeluaran',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const _CategoryBreakdownChart(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -134,9 +98,33 @@ class InsightsScreen extends ConsumerWidget {
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (date == null) return;
-    await ref.read(budgetApiProvider).startNewPeriod(date);
-    ref.invalidate(activeBudgetPeriodProvider);
-    ref.invalidate(budgetsProvider);
+    final userId = await ref.read(currentUserIdProvider.future);
+    if (userId == null) return;
+    await ref.read(budgetRepositoryProvider).startNewPeriod(userId, date);
+  }
+}
+
+class _NoPeriodBudgetCta extends StatelessWidget {
+  const _NoPeriodBudgetCta({required this.onStart});
+
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 24),
+        AppEmptyState.insights(),
+        const SizedBox(height: 12),
+        Center(
+          child: FilledButton(
+            onPressed: onStart,
+            child: const Text('Mulai periode budget'),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
   }
 }
 
@@ -145,7 +133,7 @@ class _BudgetList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final budgetsAsync = ref.watch(budgetsProvider(null));
+    final budgetsAsync = ref.watch(budgetsWithProgressProvider);
     final categoriesAsync = ref.watch(categoriesListProvider(null));
     final semantic = context.semanticColors;
 
@@ -162,38 +150,57 @@ class _BudgetList extends ConsumerWidget {
           ),
         ],
       ),
-      error: (e, _) => AppErrorState(onRetry: () => ref.invalidate(budgetsProvider)),
-      data: (budgets) {
-        if (budgets.isEmpty) return const Text('Belum ada budget di periode ini');
+      error: (e, _) =>
+          AppErrorState(onRetry: () => ref.invalidate(budgetsWithProgressProvider)),
+      data: (items) {
+        if (items.isEmpty) {
+          return const Text('Belum ada budget di periode ini');
+        }
         return Column(
-          children: budgets.map((b) {
+          children: items.map((it) {
             final categoryName = categoriesAsync.maybeWhen(
-              data: (cats) => cats.where((c) => c.id == b.categoryId).firstOrNull?.name,
+              data: (cats) =>
+                  cats.where((c) => c.id == it.budget.categoryId).firstOrNull?.name,
               orElse: () => null,
             );
-            final color = b.percentage >= 100
+            final color = it.pct >= 100
                 ? semantic.danger
-                : b.percentage >= 80
+                : it.pct >= 80
                     ? semantic.warning
                     : semantic.income;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(categoryName ?? b.categoryId),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: (b.percentage / 100).clamp(0, 1),
-                      color: color,
-                      minHeight: 8,
+            return Dismissible(
+              key: ValueKey(it.budget.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                color: semantic.danger,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.delete_outline, color: Colors.white),
+              ),
+              onDismissed: (_) => ref
+                  .read(budgetRepositoryProvider)
+                  .deleteBudget(it.budget.id),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(categoryName ?? it.budget.categoryId),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (it.pct / 100).clamp(0, 1).toDouble(),
+                        color: color,
+                        minHeight: 8,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text('${formatRupiah(b.spent)} / ${formatRupiah(b.limitAmount)}'),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      '${formatRupiah(it.spent)} / ${formatRupiah(it.budget.limitAmount)}',
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
@@ -276,6 +283,7 @@ class _CategoryBreakdownChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final breakdownAsync = ref.watch(categoryBreakdownProvider);
+    final categoriesAsync = ref.watch(categoriesListProvider(null));
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return breakdownAsync.when(
@@ -290,7 +298,13 @@ class _CategoryBreakdownChart extends ConsumerWidget {
           AppErrorState(onRetry: () => ref.invalidate(categoryBreakdownProvider)),
       data: (items) {
         if (items.isEmpty) return const Text('Belum ada data');
-        final maxTotal = items.map((e) => e.total).reduce((a, b) => a > b ? a : b);
+        final maxTotal =
+            items.map((e) => e.total).reduce((a, b) => a > b ? a : b);
+        String nameOf(String id) => categoriesAsync.maybeWhen(
+              data: (cats) =>
+                  cats.where((c) => c.id == id).firstOrNull?.name ?? '?',
+              orElse: () => '…',
+            );
         return Column(
           children: [
             for (var i = 0; i < items.length; i++)
@@ -298,11 +312,16 @@ class _CategoryBreakdownChart extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    SizedBox(width: 90, child: Text(items[i].categoryName, overflow: TextOverflow.ellipsis)),
+                    SizedBox(
+                      width: 90,
+                      child: Text(nameOf(items[i].categoryId),
+                          overflow: TextOverflow.ellipsis),
+                    ),
                     Expanded(
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: maxTotal == 0 ? 0 : (items[i].total / maxTotal),
+                        widthFactor:
+                            maxTotal == 0 ? 0 : (items[i].total / maxTotal),
                         child: Container(
                           height: 16,
                           decoration: BoxDecoration(

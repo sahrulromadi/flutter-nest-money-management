@@ -47,12 +47,17 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
       _error = null;
     });
     try {
-      await ref.read(budgetApiProvider).createBudget(
+      final periodId = widget.periodId ??
+          ref.read(activeBudgetPeriodProvider).valueOrNull?.id;
+      if (periodId == null) {
+        setState(() => _error = 'Belum ada periode budget aktif');
+        return;
+      }
+      await ref.read(budgetRepositoryProvider).setBudget(
+            periodId: periodId,
             categoryId: _categoryId!,
             limitAmount: limit,
-            periodId: widget.periodId,
           );
-      ref.invalidate(budgetsProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());

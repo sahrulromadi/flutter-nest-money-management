@@ -237,15 +237,14 @@ class _BudgetAlertBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final budgetsAsync = ref.watch(budgetsProvider(null));
+    final budgetsAsync = ref.watch(budgetsWithProgressProvider);
     final semantic = context.semanticColors;
 
     return budgetsAsync.maybeWhen(
       data: (budgets) {
-        final overLimit = budgets.where((b) => b.percentage >= 100).length;
-        final nearLimit = budgets
-            .where((b) => b.percentage >= 80 && b.percentage < 100)
-            .length;
+        final overLimit = budgets.where((b) => b.pct >= 100).length;
+        final nearLimit =
+            budgets.where((b) => b.pct >= 80 && b.pct < 100).length;
         if (overLimit == 0 && nearLimit == 0) return const SizedBox.shrink();
 
         final color = overLimit > 0 ? semantic.danger : semantic.warning;

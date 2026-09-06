@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'karasuno_decor.dart';
 
@@ -137,46 +136,3 @@ class AppErrorState extends StatelessWidget {
   }
 }
 
-/// Dipake fitur yang MURNI backend (Goals, Recurring, Insights — belum
-/// local-first) pas user belum login. Ditampilin SEBELUM nembak network,
-/// biar ga muncul error 401 yang bingungin.
-class AppLoginRequiredState extends StatelessWidget {
-  const AppLoginRequiredState({super.key, required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CrowMark(
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.55),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                  ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              icon: const Icon(Icons.login),
-              label: const Text('Login'),
-              onPressed: () => context.push('/login'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

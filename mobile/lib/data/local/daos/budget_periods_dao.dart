@@ -24,8 +24,18 @@ class BudgetPeriodsDao extends DatabaseAccessor<AppDatabase>
                 t.deletedAt.isNull()))
           .getSingleOrNull();
 
+  Stream<BudgetPeriod?> watchActive(String userId) => (select(budgetPeriods)
+        ..where((t) =>
+            t.userId.equals(userId) &
+            t.endedAt.isNull() &
+            t.deletedAt.isNull()))
+      .watchSingleOrNull();
+
   Future<void> upsert(BudgetPeriodsCompanion row) =>
       into(budgetPeriods).insertOnConflictUpdate(row);
+
+  Future<void> updateFields(String id, BudgetPeriodsCompanion row) =>
+      (update(budgetPeriods)..where((t) => t.id.equals(id))).write(row);
 
   Future<List<BudgetPeriod>> findPendingSync() =>
       (select(budgetPeriods)..where((t) => t.pendingSync.equals(true))).get();

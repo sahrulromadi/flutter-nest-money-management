@@ -19,6 +19,20 @@ class BudgetsDao extends DatabaseAccessor<AppDatabase>
   Future<void> upsert(BudgetsCompanion row) =>
       into(budgets).insertOnConflictUpdate(row);
 
+  Future<Budget?> findByPeriodAndCategory(
+    String budgetPeriodId,
+    String categoryId,
+  ) =>
+      (select(budgets)
+            ..where((t) =>
+                t.budgetPeriodId.equals(budgetPeriodId) &
+                t.categoryId.equals(categoryId) &
+                t.deletedAt.isNull()))
+          .getSingleOrNull();
+
+  Future<void> updateFields(String id, BudgetsCompanion row) =>
+      (update(budgets)..where((t) => t.id.equals(id))).write(row);
+
   Future<void> softDelete(String id, DateTime now) =>
       (update(budgets)..where((t) => t.id.equals(id))).write(
         BudgetsCompanion(
