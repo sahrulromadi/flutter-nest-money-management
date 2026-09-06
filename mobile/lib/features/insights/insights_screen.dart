@@ -105,30 +105,24 @@ class _PeriodSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedId = ref.watch(selectedPeriodIdProvider);
+    if (periods.isEmpty) return const SizedBox.shrink();
+    // Bind ke periode yang beneran lagi dilihat (bukan raw selection yg bisa null).
+    final viewedId = ref.watch(viewedPeriodProvider)?.id;
     final fmt = DateFormat('d MMM yyyy', 'id_ID');
 
     String label(Period p) => p.endedAt == null
         ? 'Aktif — sejak ${fmt.format(p.startedAt)}'
         : '${fmt.format(p.startedAt)} – ${fmt.format(p.endedAt!)}';
 
-    return Row(
-      children: [
-        Expanded(
-          child: DropdownButtonFormField<String?>(
-            initialValue: selectedId,
-            decoration: const InputDecoration(labelText: 'Periode'),
-            items: [
-              if (periods.every((p) => p.endedAt != null))
-                const DropdownMenuItem(value: null, child: Text('Bulan ini')),
-              for (final p in periods)
-                DropdownMenuItem(value: p.id, child: Text(label(p))),
-            ],
-            onChanged: (v) =>
-                ref.read(selectedPeriodIdProvider.notifier).state = v,
-          ),
-        ),
+    return DropdownButtonFormField<String>(
+      initialValue: periods.any((p) => p.id == viewedId) ? viewedId : null,
+      decoration: const InputDecoration(labelText: 'Periode'),
+      items: [
+        for (final p in periods)
+          DropdownMenuItem(value: p.id, child: Text(label(p))),
       ],
+      onChanged: (v) =>
+          ref.read(selectedPeriodIdProvider.notifier).state = v,
     );
   }
 }
@@ -153,8 +147,9 @@ class _PeriodSummaries extends ConsumerWidget {
             const SizedBox(height: 8),
             for (final s in list)
               InkWell(
-                onTap: () => ref.read(selectedPeriodIdProvider.notifier).state =
-                    s.period.endedAt == null ? null : s.period.id,
+                onTap: () => ref
+                    .read(selectedPeriodIdProvider.notifier)
+                    .state = s.period.id,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
