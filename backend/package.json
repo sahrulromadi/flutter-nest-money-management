@@ -12,7 +12,8 @@
     "migrate:create": "node-pg-migrate create --migration-file-language sql",
     "migrate:up": "node-pg-migrate up --migration-file-language sql",
     "migrate:down": "node-pg-migrate down --migration-file-language sql",
-    "seed:user": "ts-node scripts/seed-user.ts"
+    "seed:user": "ts-node scripts/seed-user.ts",
+    "seed:account": "ts-node scripts/seed-account.ts"
   },
   "keywords": [],
   "author": "",
