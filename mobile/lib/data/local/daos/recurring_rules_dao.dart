@@ -31,21 +31,6 @@ class RecurringRulesDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
-  /// Rule yang jatuh tempo dalam [until] (buat reminder notif, plan 029 Item 4).
-  Future<List<RecurringRule>> findUpcoming(String userId, DateTime until) {
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    return (select(recurringRules)
-          ..where((t) =>
-              t.userId.equals(userId) &
-              t.deletedAt.isNull() &
-              t.nextRunDate.isSmallerOrEqualValue(until) &
-              (t.endDate.isNull() |
-                  t.endDate.isBiggerOrEqualValue(todayOnly)))
-          ..orderBy([(t) => OrderingTerm.asc(t.nextRunDate)]))
-        .get();
-  }
-
   Future<void> advanceNextRun(String id, DateTime next, DateTime now) =>
       (update(recurringRules)..where((t) => t.id.equals(id))).write(
         RecurringRulesCompanion(

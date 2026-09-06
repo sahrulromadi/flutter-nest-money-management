@@ -1,5 +1,10 @@
 # 023 — Reminders (Local Notification)
 
+> **DIBATALKAN & DIHAPUS (plan 033).** Fitur reminder tagihan jatuh tempo dinilai kurang
+> berguna — user pakai Transaksi Berulang buat transaksi rutin (parkir dll), bukan tagihan
+> yang perlu diingatkan. Seluruh kode reminder + `flutter_local_notifications` + `timezone`
+> dibuang.
+
 Status: Kode ditulis, belum diverifikasi (nunggu SDK)
 Sumber: PRD.md #5 Rilis 3, backend plan 011 (`/reminders/*`)
 

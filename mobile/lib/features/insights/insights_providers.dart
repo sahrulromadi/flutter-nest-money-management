@@ -52,16 +52,20 @@ typedef ReportRange = ({DateTime from, DateTime to});
 
 DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
+/// Akhir hari — biar transaksi yang `occurred_at`-nya masih nyimpen jam
+/// (mis. dibuat hari ini tanpa ubah tanggal) tetap ke-cover.
+DateTime _endOfDay(DateTime d) =>
+    DateTime(d.year, d.month, d.day, 23, 59, 59, 999);
+
 ReportRange _rangeFor(Period? period) {
   final now = DateTime.now();
-  final today = _dateOnly(now);
   if (period == null) {
     // Belum ada periode → bulan kalender berjalan.
-    return (from: DateTime(now.year, now.month, 1), to: today);
+    return (from: DateTime(now.year, now.month, 1), to: _endOfDay(now));
   }
   return (
     from: _dateOnly(period.startedAt),
-    to: period.endedAt != null ? _dateOnly(period.endedAt!) : today,
+    to: _endOfDay(period.endedAt ?? now),
   );
 }
 
@@ -146,24 +150,26 @@ final periodSummariesProvider =
 
 typedef BudgetProgress = ({Budget budget, double spent, int pct});
 
-/// Budget periode yang dilihat + realisasi + persen. Dipakai Insights & banner Home.
-final budgetsWithProgressProvider =
-    StreamProvider.autoDispose<List<BudgetProgress>>((ref) async* {
-  final userId = await ref.watch(currentUserIdProvider.future);
+/// Budget mentah periode yang dilihat (stream tunggal).
+final _viewedBudgetsProvider =
+    StreamProvider.autoDispose<List<Budget>>((ref) {
   final period = ref.watch(viewedPeriodProvider);
-  if (userId == null || period == null) {
-    yield const [];
-    return;
-  }
-  final r = ref.watch(reportRangeProvider);
-  final db = ref.watch(appDatabaseProvider);
+  if (period == null) return Stream.value(const <Budget>[]);
+  return ref.watch(appDatabaseProvider).budgetsDao.watchByPeriod(period.id);
+});
 
-  await for (final budgets in db.budgetsDao.watchByPeriod(period.id)) {
-    yield* db.transactionsDao
-        .watchCategoryBreakdown(userId, r.from, r.to)
-        .map((breakdown) {
-      final spentByCat = {for (final e in breakdown) e.categoryId: e.total};
-      return [
+/// Budget + realisasi + persen. Dipakai Insights & banner Home.
+/// Gabung 2 stream lewat provider (bukan nested stream — biar dua-duanya
+/// reaktif).
+final budgetsWithProgressProvider =
+    Provider.autoDispose<AsyncValue<List<BudgetProgress>>>((ref) {
+  final budgetsAsync = ref.watch(_viewedBudgetsProvider);
+  final spentByCat = {
+    for (final e in ref.watch(categoryBreakdownProvider).valueOrNull ??
+        const <({String categoryId, double total})>[])
+      e.categoryId: e.total,
+  };
+  return budgetsAsync.whenData((budgets) => [
         for (final b in budgets)
           (
             budget: b,
@@ -172,7 +178,5 @@ final budgetsWithProgressProvider =
                 ? ((spentByCat[b.categoryId] ?? 0) / b.limitAmount * 100).round()
                 : 0,
           ),
-      ];
-    });
-  }
+      ]);
 });

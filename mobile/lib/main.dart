@@ -4,7 +4,6 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'app/router.dart';
 import 'features/recurring/recurring_providers.dart';
-import 'features/reminders/reminder_scheduler.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -20,12 +19,9 @@ class MoneyManagementApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    // Task startup — pas app launch, lokal, gak butuh login. Best-effort,
-    // gak nge-block first frame:
-    // - generate transaksi dari recurring rule yang jatuh tempo
-    // - jadwalin notif reminder tagihan
+    // Pas app launch: generate transaksi dari recurring rule yang jatuh tempo.
+    // Lokal, gak butuh login, best-effort (gak nge-block first frame).
     ref.watch(recurringStartupProvider);
-    ref.watch(reminderStartupProvider);
 
     return MaterialApp.router(
       title: 'Money Management',

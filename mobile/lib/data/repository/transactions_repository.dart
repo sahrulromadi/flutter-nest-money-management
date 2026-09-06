@@ -14,6 +14,10 @@ class TransactionValidationException implements Exception {
   String toString() => message;
 }
 
+/// `occurred_at` selalu date-only (jam dibuang) — biar konsisten sama sync
+/// (`_dateOnly` di serializer) & query rentang laporan.
+DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
 class TransactionsRepository {
   TransactionsRepository(this._dao, this._accountsDao, this._categoriesDao);
 
@@ -69,7 +73,7 @@ class TransactionsRepository {
         type: type,
         amount: amount,
         transferToAccountId: Value(transferToAccountId),
-        occurredAt: occurredAt,
+        occurredAt: _dateOnly(occurredAt),
         note: Value(note),
         goalId: Value(goalId),
         createdAt: now,
@@ -98,7 +102,9 @@ class TransactionsRepository {
             ? Value(transferToAccountId)
             : const Value.absent(),
         amount: amount != null ? Value(amount) : const Value.absent(),
-        occurredAt: occurredAt != null ? Value(occurredAt) : const Value.absent(),
+        occurredAt: occurredAt != null
+            ? Value(_dateOnly(occurredAt))
+            : const Value.absent(),
         categoryId: categoryId != null ? Value(categoryId) : const Value.absent(),
         note: note != null ? Value(note) : const Value.absent(),
         goalId: goalId != null ? Value(goalId) : const Value.absent(),
@@ -129,7 +135,7 @@ class TransactionsRepository {
         categoryId: const Value(null),
         type: type,
         amount: amount,
-        occurredAt: occurredAt,
+        occurredAt: _dateOnly(occurredAt),
         note: Value(note),
         createdAt: now,
         updatedAt: now,

@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/notifications/notification_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../categories/categories_list_screen.dart';
 import '../goals/goals_list_screen.dart';
 import '../recurring/recurring_list_screen.dart';
-import '../reminders/reminder_settings_tiles.dart';
 import '../settings/settings_screen.dart';
 import 'sync_tile.dart';
 
@@ -36,8 +34,6 @@ class MoreScreen extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
-    // Batalin reminder yang ke-schedule buat user ini.
-    await NotificationService.instance.cancelAll();
     // logout() clear token & set state loggedOut → router auto-redirect ke /login.
     await ref.read(authControllerProvider.notifier).logout();
   }
@@ -74,8 +70,6 @@ class MoreScreen extends ConsumerWidget {
               MaterialPageRoute(builder: (_) => const GoalsListScreen()),
             ),
           ),
-          const Divider(),
-          const ReminderSettingsTiles(),
           const Divider(),
           const SyncTile(),
           ListTile(
