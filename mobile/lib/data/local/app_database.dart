@@ -75,26 +75,30 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  /// Pindahin semua baris lokal punya [from] jadi punya [to] — dipanggil
-  /// sekali pas login pertama kali, biar data yang udah dicatat sblm login
-  /// (di bawah [LocalIdentity]) ke-link ke akun server & ikut ke-sync.
-  Future<void> reassignUserData(String from, String to) async {
-    if (from == to) return;
-    final owner = Value(to);
-    const dirty = Value(true);
+  /// Ada data lokal buat [userId]? (plan 031 — warning pas login.)
+  Future<bool> hasLocalData(String userId) async {
+    final rows = await Future.wait([
+      (select(accounts)..where((t) => t.userId.equals(userId))).get(),
+      (select(transactions)..where((t) => t.userId.equals(userId))).get(),
+      (select(categories)..where((t) => t.userId.equals(userId))).get(),
+      (select(goals)..where((t) => t.userId.equals(userId))).get(),
+      (select(recurringRules)..where((t) => t.userId.equals(userId))).get(),
+      (select(periods)..where((t) => t.userId.equals(userId))).get(),
+    ]);
+    return rows.any((r) => r.isNotEmpty);
+  }
+
+  /// Hapus SEMUA data lokal (semua tabel). Encryption key ga disentuh.
+  /// plan 031 — pas login, server menang.
+  Future<void> wipeAll() async {
     await transaction(() async {
-      await (update(accounts)..where((t) => t.userId.equals(from)))
-          .write(AccountsCompanion(userId: owner, pendingSync: dirty));
-      await (update(categories)..where((t) => t.userId.equals(from)))
-          .write(CategoriesCompanion(userId: owner, pendingSync: dirty));
-      await (update(goals)..where((t) => t.userId.equals(from)))
-          .write(GoalsCompanion(userId: owner, pendingSync: dirty));
-      await (update(recurringRules)..where((t) => t.userId.equals(from)))
-          .write(RecurringRulesCompanion(userId: owner, pendingSync: dirty));
-      await (update(transactions)..where((t) => t.userId.equals(from)))
-          .write(TransactionsCompanion(userId: owner, pendingSync: dirty));
-      await (update(periods)..where((t) => t.userId.equals(from)))
-          .write(PeriodsCompanion(userId: owner, pendingSync: dirty));
+      await delete(budgets).go();
+      await delete(periods).go();
+      await delete(transactions).go();
+      await delete(recurringRules).go();
+      await delete(goals).go();
+      await delete(categories).go();
+      await delete(accounts).go();
     });
   }
 

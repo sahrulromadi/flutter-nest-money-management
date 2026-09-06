@@ -30,15 +30,14 @@ class AuthController extends Notifier<AuthPhase> {
       refreshToken: tokens.refreshToken,
     );
 
-    // Login pertama kali: data yang udah dicatat sblm login (di bawah id
-    // lokal) di-link ke akun server, biar ikut ke-sync bukannya "ilang".
+    // plan 031 — server menang: device baru login ke akun → data lokal
+    // (kalau ada) udah dikonfirmasi buat dihapus di layar Login. Wipe +
+    // adopt id server; sync pull yang bawa data akun turun.
     final serverUserId = decodeUserIdFromJwt(tokens.accessToken);
     if (serverUserId != null) {
       final localId = await LocalIdentity.ensure();
       if (localId != serverUserId) {
-        await ref
-            .read(appDatabaseProvider)
-            .reassignUserData(localId, serverUserId);
+        await ref.read(appDatabaseProvider).wipeAll();
         await LocalIdentity.adopt(serverUserId);
       }
     }

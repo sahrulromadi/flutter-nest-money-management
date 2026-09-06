@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/local/database_provider.dart';
+import '../../data/local/local_identity.dart';
 import '../../shared/karasuno_decor.dart';
 import 'auth_controller.dart';
 
@@ -32,6 +34,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
+
+    // plan 031 — server menang: kalau device ini punya data lokal (belum
+    // pernah login), konfirmasi dulu — login bakal HAPUS data lokal.
+    final localId = await LocalIdentity.ensure();
+    final hasLocal =
+        await ref.read(appDatabaseProvider).hasLocalData(localId);
+    if (hasLocal && mounted) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Ganti dengan data akun?'),
+          content: Text(
+            'HP ini punya data yang belum masuk akun mana pun. Login ke '
+            '"${_emailController.text.trim()}" bakal MENGHAPUS data itu dan '
+            'ganti dengan data akun. Lanjut?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Login & Ganti'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    if (!mounted) return;
+
     setState(() {
       _loading = true;
       _error = null;

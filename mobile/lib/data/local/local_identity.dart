@@ -8,10 +8,10 @@ const _storage = FlutterSecureStorage();
 /// kepakai penuh tanpa login (local-first, no forced auth gate). Sekali
 /// dibikin, id ini stabil selama app terinstall.
 ///
-/// Begitu user login pertama kali, [AuthController.login] mindahin semua
-/// baris lokal dari id ini ke `sub` (user id) dari server, terus [adopt]
-/// dipanggil biar id lokal = id server selamanya (data ga "ilang" pas
-/// logout, dan re-login berikutnya ga migrasi ulang).
+/// Pas user login (plan 031): kalau id lokal beda dari user id server,
+/// [AuthController.login] **hapus** semua data lokal (server menang, biar ga
+/// nabrak) lalu [adopt] id server. Layar Login udah konfirmasi ke user dulu
+/// kalau ada data lokal yang bakal kehapus.
 class LocalIdentity {
   const LocalIdentity._();
 
