@@ -1,7 +1,20 @@
 # 027 — Perubahan & Penambahan Fitur (Batch)
 
-Status: Draft — dikumpulin dulu, eksekusi nanti setelah semua item masuk
+Status: **DIKERJAKAN** (2026-09-06) — semua 6 item selesai di branch `development`.
 Sumber: permintaan user — beberapa perubahan sekaligus di atas APK yang udah live + data ke-sync ke Postgres
+
+## Progress
+| Item | Commit | Verifikasi |
+|---|---|---|
+| 1 — buang accounts.type | `6b8bcfe` (BE), `f8170d9` (mobile) | migrate up/down OK, nest build + eslint clean, flutter analyze clean |
+| 2 — MoneyField input nominal | `e4f463b` (3 form), `f8170d9` (form akun) | flutter analyze clean |
+| 3 — FAB ga ngambang di keyboard | `cd8127f` | 1-liner, analyze clean |
+| 4 — sort_order + drag reorder kategori | `fb1e83a` (BE), `f8170d9` (mobile) | migrate + backfill OK, analyze clean, build_runner OK |
+| 5 — hapus akun & kategori | `989d384` (BE cascade), `9ff90b9` (mobile) | analyze clean |
+| 6 — buang icon/warna kategori | `989d384` (BE), `f8170d9` (mobile) | migrate OK, analyze clean |
+
+**Belum diverifikasi**: `flutter build apk` (Android SDK ga ada di env eksekusi) + test upgrade
+in-place di device dengan data live + sync end-to-end ke Postgres. User perlu jalanin manual.
 
 Konteks umum: APK sudah rilis & dipakai. Data lokal (Drift/SQLite terenkripsi) sudah
 ke-sync ke Postgres backend. Jadi tiap perubahan schema **wajib** punya jalur migrasi

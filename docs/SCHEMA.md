@@ -16,9 +16,10 @@ Semua tabel: `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`, `created_at TIMEST
 |---|---|---|
 | user_id | UUID FK → users | |
 | name | TEXT | |
-| type | TEXT | enum: Bank / Ewallet / Cash |
 | initial_balance | NUMERIC(18,2) | |
 | currency | TEXT | default 'IDR' |
+
+> Kolom `type` (enum Bank/Ewallet/Cash) dicabut di plan 027 — tipe akun gak dipakai di logika apa pun.
 
 Saldo berjalan **tidak disimpan** — dihitung on-the-fly: `initial_balance + SUM(transaksi terkait account ini, sesuai arah in/out/transfer)`. Alasan: hindari resiko drift kalau ada bug sync/edit; skala solo-user cukup ringan buat query on-the-fly.
 
@@ -29,10 +30,11 @@ Saldo berjalan **tidak disimpan** — dihitung on-the-fly: `initial_balance + SU
 | name | TEXT | |
 | type | TEXT | enum: Income / Expense |
 | parent_id | UUID FK → categories, NULL | subkategori |
-| icon | TEXT NULL | |
-| color | TEXT NULL | |
+| sort_order | INTEGER NOT NULL DEFAULT 0 | urutan manual (drag di mobile), per grup (user_id, type, parent_id) |
 
-Gak ada kategori bawaan/predefined — semua kategori dibuat manual oleh user. Delete = soft delete (kategori lama dipakai transaksi historis tetap valid, PRD #9).
+Gak ada kategori bawaan/predefined — semua kategori dibuat manual oleh user. Delete = soft delete cascade ke subkategori (kategori lama dipakai transaksi historis tetap valid, PRD #9).
+
+> Kolom `icon` & `color` dicabut di plan 027 (revert plan 024) — kategori jadi teks aja. `sort_order` ditambah di plan 027.
 
 ## transactions
 | Kolom | Tipe | Ket |

@@ -1,6 +1,7 @@
 # 024 — Polish Pra-Deploy
 
 Status: Belum dikerjakan
+> Bagian **icon & warna kategori** di-REVERT oleh plan 027 Item 6 (kategori jadi teks aja).
 Sumber: kumpulan temuan pemakaian + keputusan user selama sesi coba-coba app
 
 4 item polish yang dikerjain barengan sebelum deploy. Independen satu sama lain — boleh dikerjain terpisah, digabung di sini biar 1 pass review.
