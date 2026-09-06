@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
@@ -19,59 +20,51 @@ class InsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activePeriodAsync = ref.watch(activePeriodProvider);
+    final periodsAsync = ref.watch(allPeriodsProvider);
+    final viewed = ref.watch(viewedPeriodProvider);
+    final closed = ref.watch(viewedPeriodClosedProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Insights')),
-      body: activePeriodAsync.when(
-        loading: () => ListView(
-          padding: const EdgeInsets.all(16),
-          children: const [
-            Skeleton(width: 220, height: 20),
-            SizedBox(height: 24),
+      body: periodsAsync.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(children: [
             Skeleton(height: 40, radius: 4),
             SizedBox(height: 12),
             Skeleton(height: 160, radius: 6),
-          ],
+          ]),
         ),
         error: (e, _) => AppErrorState(
-          onRetry: () => ref.invalidate(activePeriodProvider),
+          onRetry: () => ref.invalidate(allPeriodsProvider),
         ),
-        data: (period) {
+        data: (periods) {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (period == null)
-                _NoPeriodBudgetCta(onStart: () => _startNewPeriod(context, ref))
+              _PeriodSelector(periods: periods),
+              const SizedBox(height: 16),
+              const _PeriodSummaries(),
+              const SizedBox(height: 24),
+              if (periods.isEmpty)
+                _NoPeriodCta(onStart: () => _startNewPeriod(context, ref))
               else ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Periode aktif: sejak ${DateFormat('d MMM yyyy', 'id_ID').format(period.startedAt)}',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => _startNewPeriod(context, ref),
-                      child: const Text('Periode baru'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Budget',
                         style: Theme.of(context).textTheme.titleMedium),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => showBudgetFormSheet(context),
-                    ),
+                    if (!closed && viewed != null)
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => showBudgetFormSheet(context),
+                      ),
                   ],
                 ),
-                const _BudgetList(),
+                if (closed)
+                  Text('Periode ditutup — budget read-only',
+                      style: Theme.of(context).textTheme.bodySmall),
+                _BudgetList(readOnly: closed),
                 const SizedBox(height: 24),
               ],
               Text('Cashflow Trend',
@@ -101,11 +94,95 @@ class InsightsScreen extends ConsumerWidget {
     final userId = await ref.read(currentUserIdProvider.future);
     if (userId == null) return;
     await ref.read(budgetRepositoryProvider).startNewPeriod(userId, date);
+    ref.read(selectedPeriodIdProvider.notifier).state = null; // balik ke aktif
   }
 }
 
-class _NoPeriodBudgetCta extends StatelessWidget {
-  const _NoPeriodBudgetCta({required this.onStart});
+class _PeriodSelector extends ConsumerWidget {
+  const _PeriodSelector({required this.periods});
+
+  final List<Period> periods;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedId = ref.watch(selectedPeriodIdProvider);
+    final fmt = DateFormat('d MMM yyyy', 'id_ID');
+
+    String label(Period p) => p.endedAt == null
+        ? 'Aktif — sejak ${fmt.format(p.startedAt)}'
+        : '${fmt.format(p.startedAt)} – ${fmt.format(p.endedAt!)}';
+
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<String?>(
+            initialValue: selectedId,
+            decoration: const InputDecoration(labelText: 'Periode'),
+            items: [
+              if (periods.every((p) => p.endedAt != null))
+                const DropdownMenuItem(value: null, child: Text('Bulan ini')),
+              for (final p in periods)
+                DropdownMenuItem(value: p.id, child: Text(label(p))),
+            ],
+            onChanged: (v) =>
+                ref.read(selectedPeriodIdProvider.notifier).state = v,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PeriodSummaries extends ConsumerWidget {
+  const _PeriodSummaries();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(periodSummariesProvider);
+    final semantic = context.semanticColors;
+    final fmt = DateFormat('d MMM', 'id_ID');
+
+    return async.maybeWhen(
+      data: (list) {
+        if (list.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ringkasan per Periode',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            for (final s in list)
+              InkWell(
+                onTap: () => ref.read(selectedPeriodIdProvider.notifier).state =
+                    s.period.endedAt == null ? null : s.period.id,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(s.period.endedAt == null
+                            ? 'Aktif (sejak ${fmt.format(s.period.startedAt)})'
+                            : '${fmt.format(s.period.startedAt)} – ${fmt.format(s.period.endedAt!)}'),
+                      ),
+                      Text('+${formatRupiah(s.income)}',
+                          style: TextStyle(color: semantic.income)),
+                      const SizedBox(width: 8),
+                      Text('-${formatRupiah(s.expense)}',
+                          style: TextStyle(color: semantic.expense)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _NoPeriodCta extends StatelessWidget {
+  const _NoPeriodCta({required this.onStart});
 
   final VoidCallback onStart;
 
@@ -119,7 +196,7 @@ class _NoPeriodBudgetCta extends StatelessWidget {
         Center(
           child: FilledButton(
             onPressed: onStart,
-            child: const Text('Mulai periode budget'),
+            child: const Text('Mulai periode'),
           ),
         ),
         const SizedBox(height: 24),
@@ -129,7 +206,9 @@ class _NoPeriodBudgetCta extends StatelessWidget {
 }
 
 class _BudgetList extends ConsumerWidget {
-  const _BudgetList();
+  const _BudgetList({this.readOnly = false});
+
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,6 +247,29 @@ class _BudgetList extends ConsumerWidget {
                 : it.pct >= 80
                     ? semantic.warning
                     : semantic.income;
+            final row = Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(categoryName ?? it.budget.categoryId),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: (it.pct / 100).clamp(0, 1).toDouble(),
+                      color: color,
+                      minHeight: 8,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${formatRupiah(it.spent)} / ${formatRupiah(it.budget.limitAmount)}',
+                  ),
+                ],
+              ),
+            );
+            if (readOnly) return row;
             return Dismissible(
               key: ValueKey(it.budget.id),
               direction: DismissDirection.endToStart,
@@ -180,28 +282,7 @@ class _BudgetList extends ConsumerWidget {
               onDismissed: (_) => ref
                   .read(budgetRepositoryProvider)
                   .deleteBudget(it.budget.id),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(categoryName ?? it.budget.categoryId),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (it.pct / 100).clamp(0, 1).toDouble(),
-                        color: color,
-                        minHeight: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${formatRupiah(it.spent)} / ${formatRupiah(it.budget.limitAmount)}',
-                    ),
-                  ],
-                ),
-              ),
+              child: row,
             );
           }).toList(),
         );

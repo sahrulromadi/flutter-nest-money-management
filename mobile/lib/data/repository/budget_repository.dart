@@ -16,6 +16,9 @@ class BudgetRepository {
   Stream<Period?> watchActivePeriod(String userId) =>
       _periodsDao.watchActive(userId);
 
+  Stream<List<Period>> watchAllPeriods(String userId) =>
+      _periodsDao.watchAll(userId);
+
   Stream<List<Budget>> watchBudgets(String periodId) =>
       _budgetsDao.watchByPeriod(periodId);
 

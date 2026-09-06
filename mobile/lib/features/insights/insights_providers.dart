@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
@@ -10,8 +11,7 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
   return BudgetRepository(db.periodsDao, db.budgetsDao, db.transactionsDao);
 });
 
-final activePeriodProvider =
-    StreamProvider.autoDispose<Period?>((ref) async* {
+final activePeriodProvider = StreamProvider.autoDispose<Period?>((ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
   if (userId == null) {
     yield null;
@@ -20,18 +20,54 @@ final activePeriodProvider =
   yield* ref.watch(budgetRepositoryProvider).watchActivePeriod(userId);
 });
 
+final allPeriodsProvider =
+    StreamProvider.autoDispose<List<Period>>((ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  if (userId == null) {
+    yield const [];
+    return;
+  }
+  yield* ref.watch(budgetRepositoryProvider).watchAllPeriods(userId);
+});
+
+/// id periode yang lagi dilihat di Insights. null = periode aktif.
+final selectedPeriodIdProvider = StateProvider.autoDispose<String?>((_) => null);
+
+/// Periode yang lagi dilihat (resolve dari selection; fallback ke aktif).
+final viewedPeriodProvider = Provider.autoDispose<Period?>((ref) {
+  final selectedId = ref.watch(selectedPeriodIdProvider);
+  final all = ref.watch(allPeriodsProvider).valueOrNull ?? const <Period>[];
+  if (selectedId != null) {
+    return all.firstWhereOrNull((p) => p.id == selectedId);
+  }
+  return ref.watch(activePeriodProvider).valueOrNull;
+});
+
+/// Periode yang dilihat udah ditutup? (budget jadi read-only)
+final viewedPeriodClosedProvider = Provider.autoDispose<bool>((ref) {
+  return ref.watch(viewedPeriodProvider)?.endedAt != null;
+});
+
 typedef ReportRange = ({DateTime from, DateTime to});
 
-/// Rentang laporan = periode budget aktif; kalau belum ada → bulan kalender berjalan.
-final reportRangeProvider = Provider.autoDispose<ReportRange>((ref) {
+DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+ReportRange _rangeFor(Period? period) {
   final now = DateTime.now();
-  final to = DateTime(now.year, now.month, now.day);
-  final period = ref.watch(activePeriodProvider).valueOrNull;
-  final from = period != null
-      ? DateTime(period.startedAt.year, period.startedAt.month,
-          period.startedAt.day)
-      : DateTime(now.year, now.month, 1);
-  return (from: from, to: to);
+  final today = _dateOnly(now);
+  if (period == null) {
+    // Belum ada periode → bulan kalender berjalan.
+    return (from: DateTime(now.year, now.month, 1), to: today);
+  }
+  return (
+    from: _dateOnly(period.startedAt),
+    to: period.endedAt != null ? _dateOnly(period.endedAt!) : today,
+  );
+}
+
+/// Rentang laporan = periode yang lagi dilihat.
+final reportRangeProvider = Provider.autoDispose<ReportRange>((ref) {
+  return _rangeFor(ref.watch(viewedPeriodProvider));
 });
 
 final insightsSummaryProvider =
@@ -76,13 +112,45 @@ final cashflowTrendProvider = StreamProvider.autoDispose<
       .watchCashflowTrend(userId, r.from, r.to);
 });
 
+typedef PeriodSummary = ({Period period, double income, double expense});
+
+/// Income vs expense buat SEMUA periode — section "Ringkasan per Periode".
+/// Watch semua transaksi user sekali, bucket per periode by occurred_at.
+final periodSummariesProvider =
+    StreamProvider.autoDispose<List<PeriodSummary>>((ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  final periods = ref.watch(allPeriodsProvider).valueOrNull;
+  if (userId == null || periods == null || periods.isEmpty) {
+    yield const [];
+    return;
+  }
+  final txnDao = ref.watch(appDatabaseProvider).transactionsDao;
+
+  yield* txnDao.watchAll(userId).map((txns) {
+    return [
+      for (final p in periods)
+        () {
+          final r = _rangeFor(p);
+          var income = 0.0, expense = 0.0;
+          for (final t in txns) {
+            final d = _dateOnly(t.occurredAt);
+            if (d.isBefore(r.from) || d.isAfter(r.to)) continue;
+            if (t.type == 'Income') income += t.amount;
+            if (t.type == 'Expense') expense += t.amount;
+          }
+          return (period: p, income: income, expense: expense);
+        }(),
+    ];
+  });
+});
+
 typedef BudgetProgress = ({Budget budget, double spent, int pct});
 
-/// Budget periode aktif + realisasi + persen. Dipakai Insights & banner Home.
+/// Budget periode yang dilihat + realisasi + persen. Dipakai Insights & banner Home.
 final budgetsWithProgressProvider =
     StreamProvider.autoDispose<List<BudgetProgress>>((ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
-  final period = ref.watch(activePeriodProvider).valueOrNull;
+  final period = ref.watch(viewedPeriodProvider);
   if (userId == null || period == null) {
     yield const [];
     return;
