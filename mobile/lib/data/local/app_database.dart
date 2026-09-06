@@ -51,7 +51,22 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            // Item 1: buang accounts.type. Item 6: buang categories.icon+color.
+            // Item 4: tambah categories.sort_order (default 0).
+            await m.alterTable(TableMigration(accounts));
+            await m.alterTable(
+              TableMigration(categories, newColumns: [categories.sortOrder]),
+            );
+          }
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(() async {

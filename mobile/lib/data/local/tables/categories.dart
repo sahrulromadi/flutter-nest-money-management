@@ -10,8 +10,8 @@ class Categories extends Table {
   TextColumn get type =>
       text().customConstraint("CHECK (type IN ('Income', 'Expense'))")();
   TextColumn get parentId => text().named('parent_id').nullable()();
-  TextColumn get icon => text().nullable()();
-  TextColumn get color => text().nullable()();
+  IntColumn get sortOrder =>
+      integer().named('sort_order').withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
   DateTimeColumn get updatedAt => dateTime().named('updated_at')();
   DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();

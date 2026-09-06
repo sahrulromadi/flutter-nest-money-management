@@ -6,8 +6,6 @@ class Accounts extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text().named('user_id')();
   TextColumn get name => text()();
-  TextColumn get type =>
-      text().customConstraint("CHECK (type IN ('Bank', 'Ewallet', 'Cash'))")();
   RealColumn get initialBalance => real().named('initial_balance')();
   TextColumn get currency => text().withDefault(const Constant('IDR'))();
   DateTimeColumn get createdAt => dateTime().named('created_at')();

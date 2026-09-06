@@ -3,12 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/app_illustration.dart';
-import '../../shared/category_visuals.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/karasuno_decor.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
-import '../categories/categories_providers.dart';
 import '../insights/insights_providers.dart';
 import 'home_providers.dart';
 
@@ -66,24 +64,16 @@ class HomeScreen extends ConsumerWidget {
                           onAdd: () => context.push('/transactions/add'),
                         );
                       }
-                      final catMap = ref.watch(categoriesByIdProvider);
                       return Column(
                         children: transactions.map((t) {
-                          final cat = t.categoryId == null
-                              ? null
-                              : catMap[t.categoryId];
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: Icon(
-                              cat != null
-                                  ? categoryIcon(cat.icon)
-                                  : switch (t.type) {
-                                      'Income' => Icons.arrow_downward,
-                                      'Expense' => Icons.arrow_upward,
-                                      _ => Icons.swap_horiz,
-                                    },
-                              color:
-                                  cat != null ? categoryColor(cat.color) : null,
+                              switch (t.type) {
+                                'Income' => Icons.arrow_downward,
+                                'Expense' => Icons.arrow_upward,
+                                _ => Icons.swap_horiz,
+                              },
                             ),
                             title: Text(t.note?.isNotEmpty == true
                                 ? t.note!

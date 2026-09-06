@@ -7,7 +7,7 @@ import '../auth/current_user_provider.dart';
 
 final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return CategoriesRepository(db.categoriesDao);
+  return CategoriesRepository(db.categoriesDao, db.transactionsDao);
 });
 
 final categoriesListProvider =
@@ -19,14 +19,4 @@ final categoriesListProvider =
   }
   final repo = ref.watch(categoriesRepositoryProvider);
   yield* repo.watchAll(userId, type: type);
-});
-
-/// Map id -> Category (semua tipe), buat lookup cepat di row transaksi
-/// (nampilin icon+warna kategori). Reuse `categoriesListProvider(null)`,
-/// re-compute tiap list berubah. Kosong selama list masih loading.
-final categoriesByIdProvider =
-    Provider.autoDispose<Map<String, Category>>((ref) {
-  final list = ref.watch(categoriesListProvider(null)).valueOrNull ??
-      const <Category>[];
-  return {for (final c in list) c.id: c};
 });

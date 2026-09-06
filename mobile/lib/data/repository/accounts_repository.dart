@@ -37,7 +37,6 @@ class AccountsRepository {
   Future<void> create({
     required String userId,
     required String name,
-    required String type,
     required double initialBalance,
   }) {
     final now = DateTime.now().toUtc();
@@ -46,7 +45,6 @@ class AccountsRepository {
         id: const Uuid().v4(),
         userId: userId,
         name: name,
-        type: type,
         initialBalance: initialBalance,
         createdAt: now,
         updatedAt: now,
@@ -57,19 +55,20 @@ class AccountsRepository {
   Future<void> update({
     required String id,
     String? name,
-    String? type,
   }) {
     final now = DateTime.now().toUtc();
     return _accountsDao.updateFields(
       id,
       AccountsCompanion(
         name: name != null ? Value(name) : const Value.absent(),
-        type: type != null ? Value(type) : const Value.absent(),
         updatedAt: Value(now),
         pendingSync: const Value(true),
       ),
     );
   }
+
+  Stream<List<Account>> watchAllIncludingDeleted(String userId) =>
+      _accountsDao.watchAllIncludingDeleted(userId);
 
   Future<void> delete(String id) =>
       _accountsDao.softDelete(id, DateTime.now().toUtc());

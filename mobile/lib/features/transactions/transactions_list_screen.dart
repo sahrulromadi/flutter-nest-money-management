@@ -5,12 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
-import '../../shared/category_visuals.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../accounts/accounts_providers.dart';
-import '../categories/categories_providers.dart';
 import '../home/home_providers.dart';
 import 'transactions_providers.dart';
 
@@ -258,9 +256,6 @@ class _TransactionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semantic = context.semanticColors;
-    final cat = transaction.categoryId == null
-        ? null
-        : ref.watch(categoriesByIdProvider)[transaction.categoryId];
     final color = switch (transaction.type) {
       'Income' => semantic.income,
       'Expense' => semantic.expense,
@@ -285,14 +280,11 @@ class _TransactionTile extends ConsumerWidget {
           ref.read(transactionsRepositoryProvider).delete(transaction.id),
       child: ListTile(
         leading: Icon(
-          cat != null
-              ? categoryIcon(cat.icon)
-              : switch (transaction.type) {
-                  'Income' => Icons.arrow_downward,
-                  'Expense' => Icons.arrow_upward,
-                  _ => Icons.swap_horiz,
-                },
-          color: cat != null ? categoryColor(cat.color) : null,
+          switch (transaction.type) {
+            'Income' => Icons.arrow_downward,
+            'Expense' => Icons.arrow_upward,
+            _ => Icons.swap_horiz,
+          },
         ),
         title: Text(transaction.note?.isNotEmpty == true ? transaction.note! : transaction.type),
         subtitle: _AccountLabel(accountId: transaction.accountId),

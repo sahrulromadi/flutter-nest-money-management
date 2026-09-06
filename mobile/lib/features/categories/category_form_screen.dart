@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
-import '../../shared/category_visuals.dart';
 import '../auth/current_user_provider.dart';
 import 'categories_providers.dart';
 
@@ -22,8 +21,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       TextEditingController(text: widget.category?.name ?? '');
   late String _type = widget.category?.type ?? widget.defaultType ?? 'Expense';
   String? _parentId;
-  String? _icon;
-  String? _color;
   bool _saving = false;
   String? _error;
 
@@ -33,8 +30,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   void initState() {
     super.initState();
     _parentId = widget.category?.parentId;
-    _icon = widget.category?.icon;
-    _color = widget.category?.color;
   }
 
   @override
@@ -56,8 +51,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         await repo.update(
           id: widget.category!.id,
           name: _nameController.text,
-          icon: _icon,
-          color: _color,
         );
       } else {
         final userId = await ref.read(currentUserIdProvider.future);
@@ -66,8 +59,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           name: _nameController.text,
           type: _type,
           parentId: _parentId,
-          icon: _icon,
-          color: _color,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -132,33 +123,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   },
                 ),
               ],
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (var i = 0; i < kCategoryIcons.length; i++)
-                    IconButton(
-                      isSelected: _icon == '$i',
-                      icon: Icon(kCategoryIcons[i]),
-                      onPressed: () => setState(() => _icon = '$i'),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: kCategoryColors.map((color) {
-                  final hex = categoryColorToHex(color);
-                  final selected = _color == hex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _color = hex),
-                    child: CircleAvatar(
-                      backgroundColor: color,
-                      radius: selected ? 18 : 14,
-                    ),
-                  );
-                }).toList(),
-              ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

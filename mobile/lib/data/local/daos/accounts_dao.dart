@@ -16,6 +16,11 @@ class AccountsDao extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  /// Termasuk yang udah di-soft-delete — buat lookup nama akun di row
+  /// transaksi historis (akun kehapus tetap kebaca).
+  Stream<List<Account>> watchAllIncludingDeleted(String userId) =>
+      (select(accounts)..where((t) => t.userId.equals(userId))).watch();
+
   Future<Account?> findById(String id) =>
       (select(accounts)..where((t) => t.id.equals(id))).getSingleOrNull();
 

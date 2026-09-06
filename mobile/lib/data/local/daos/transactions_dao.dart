@@ -47,6 +47,28 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
   Future<Transaction?> findById(String id) =>
       (select(transactions)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  /// Jumlah transaksi (belum kehapus) yang refer ke akun ini — akun asal
+  /// maupun tujuan transfer. Buat warning sebelum hapus akun.
+  Future<int> countForAccount(String accountId) async {
+    final q = selectOnly(transactions)
+      ..addColumns([transactions.id.count()])
+      ..where((transactions.accountId.equals(accountId) |
+              transactions.transferToAccountId.equals(accountId)) &
+          transactions.deletedAt.isNull());
+    final row = await q.getSingle();
+    return row.read(transactions.id.count()) ?? 0;
+  }
+
+  /// Jumlah transaksi (belum kehapus) yang pakai kategori ini.
+  Future<int> countForCategory(String categoryId) async {
+    final q = selectOnly(transactions)
+      ..addColumns([transactions.id.count()])
+      ..where(transactions.categoryId.equals(categoryId) &
+          transactions.deletedAt.isNull());
+    final row = await q.getSingle();
+    return row.read(transactions.id.count()) ?? 0;
+  }
+
   Future<void> upsert(TransactionsCompanion row) =>
       into(transactions).insertOnConflictUpdate(row);
 

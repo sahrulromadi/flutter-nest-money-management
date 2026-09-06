@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/money_field.dart';
 import '../auth/current_user_provider.dart';
 import 'accounts_providers.dart';
-
-const _accountTypes = ['Bank', 'Ewallet', 'Cash'];
 
 class AccountFormScreen extends ConsumerStatefulWidget {
   const AccountFormScreen({super.key, this.account});
@@ -20,9 +19,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final _nameController = TextEditingController(text: widget.account?.name ?? '');
   late final _initialBalanceController = TextEditingController(
-    text: widget.account?.initialBalance.toStringAsFixed(0) ?? '0',
+    text: moneyText(widget.account?.initialBalance ?? 0),
   );
-  late String _type = widget.account?.type ?? _accountTypes.first;
   bool _saving = false;
 
   bool get _isEdit => widget.account != null;
@@ -40,14 +38,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
     final repo = ref.read(accountsRepositoryProvider);
     if (_isEdit) {
-      await repo.update(id: widget.account!.id, name: _nameController.text, type: _type);
+      await repo.update(id: widget.account!.id, name: _nameController.text);
     } else {
       final userId = await ref.read(currentUserIdProvider.future);
       await repo.create(
         userId: userId!,
         name: _nameController.text,
-        type: _type,
-        initialBalance: double.tryParse(_initialBalanceController.text) ?? 0,
+        initialBalance: moneyValue(_initialBalanceController.text).toDouble(),
       );
     }
 
@@ -70,23 +67,12 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 decoration: const InputDecoration(labelText: 'Nama akun'),
                 validator: (v) => (v == null || v.isEmpty) ? 'Wajib diisi' : null,
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: _accountTypes.map((type) {
-                  return ChoiceChip(
-                    label: Text(type),
-                    selected: _type == type,
-                    onSelected: (_) => setState(() => _type = type),
-                  );
-                }).toList(),
-              ),
               if (!_isEdit) ...[
                 const SizedBox(height: 16),
-                TextFormField(
+                MoneyField(
                   controller: _initialBalanceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Saldo awal'),
+                  label: 'Saldo awal',
+                  validator: (_) => null,
                 ),
               ],
               const SizedBox(height: 24),

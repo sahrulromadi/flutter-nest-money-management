@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
-import '../../shared/category_visuals.dart';
 import '../../shared/skeleton.dart';
 import 'categories_providers.dart';
 import 'category_form_screen.dart';
@@ -67,35 +66,39 @@ class _CategoryTypeList extends ConsumerWidget {
         final parents = categories.where((c) => c.parentId == null).toList();
         final children = categories.where((c) => c.parentId != null).toList();
 
-        return ListView(
-          children: parents.map((parent) {
+        return ReorderableListView.builder(
+          itemCount: parents.length,
+          // Tahan-geser buat ubah urutan kategori (level atas). Sub ikut parent.
+          onReorderItem: (oldIndex, newIndex) {
+            final reordered = [...parents];
+            reordered.insert(newIndex, reordered.removeAt(oldIndex));
+            ref
+                .read(categoriesRepositoryProvider)
+                .reorder(reordered.map((c) => c.id).toList());
+          },
+          itemBuilder: (context, index) {
+            final parent = parents[index];
             final subs = children.where((c) => c.parentId == parent.id).toList();
             return Column(
+              key: ValueKey(parent.id),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
-                  leading: Icon(
-                    categoryIcon(parent.icon),
-                    color: categoryColor(parent.color),
-                  ),
                   title: Text(parent.name),
+                  trailing: const Icon(Icons.drag_handle),
                   onTap: () => _openForm(context, parent),
                 ),
                 for (final sub in subs)
                   Padding(
                     padding: const EdgeInsets.only(left: 32),
                     child: ListTile(
-                      leading: Icon(
-                        categoryIcon(sub.icon),
-                        color: categoryColor(sub.color),
-                      ),
                       title: Text(sub.name),
                       onTap: () => _openForm(context, sub),
                     ),
                   ),
               ],
             );
-          }).toList(),
+          },
         );
       },
     );

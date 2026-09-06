@@ -35,16 +35,6 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _typeMeta = const VerificationMeta('type');
-  @override
-  late final GeneratedColumn<String> type = GeneratedColumn<String>(
-    'type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'CHECK (type IN (\'Bank\', \'Ewallet\', \'Cash\'))',
-  );
   static const VerificationMeta _initialBalanceMeta = const VerificationMeta(
     'initialBalance',
   );
@@ -121,7 +111,6 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     id,
     userId,
     name,
-    type,
     initialBalance,
     currency,
     createdAt,
@@ -161,14 +150,6 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
-    }
-    if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_typeMeta);
     }
     if (data.containsKey('initial_balance')) {
       context.handle(
@@ -239,10 +220,6 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
       initialBalance: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}initial_balance'],
@@ -280,7 +257,6 @@ class Account extends DataClass implements Insertable<Account> {
   final String id;
   final String userId;
   final String name;
-  final String type;
   final double initialBalance;
   final String currency;
   final DateTime createdAt;
@@ -291,7 +267,6 @@ class Account extends DataClass implements Insertable<Account> {
     required this.id,
     required this.userId,
     required this.name,
-    required this.type,
     required this.initialBalance,
     required this.currency,
     required this.createdAt,
@@ -305,7 +280,6 @@ class Account extends DataClass implements Insertable<Account> {
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['name'] = Variable<String>(name);
-    map['type'] = Variable<String>(type);
     map['initial_balance'] = Variable<double>(initialBalance);
     map['currency'] = Variable<String>(currency);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -322,7 +296,6 @@ class Account extends DataClass implements Insertable<Account> {
       id: Value(id),
       userId: Value(userId),
       name: Value(name),
-      type: Value(type),
       initialBalance: Value(initialBalance),
       currency: Value(currency),
       createdAt: Value(createdAt),
@@ -343,7 +316,6 @@ class Account extends DataClass implements Insertable<Account> {
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       name: serializer.fromJson<String>(json['name']),
-      type: serializer.fromJson<String>(json['type']),
       initialBalance: serializer.fromJson<double>(json['initialBalance']),
       currency: serializer.fromJson<String>(json['currency']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -359,7 +331,6 @@ class Account extends DataClass implements Insertable<Account> {
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'name': serializer.toJson<String>(name),
-      'type': serializer.toJson<String>(type),
       'initialBalance': serializer.toJson<double>(initialBalance),
       'currency': serializer.toJson<String>(currency),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -373,7 +344,6 @@ class Account extends DataClass implements Insertable<Account> {
     String? id,
     String? userId,
     String? name,
-    String? type,
     double? initialBalance,
     String? currency,
     DateTime? createdAt,
@@ -384,7 +354,6 @@ class Account extends DataClass implements Insertable<Account> {
     id: id ?? this.id,
     userId: userId ?? this.userId,
     name: name ?? this.name,
-    type: type ?? this.type,
     initialBalance: initialBalance ?? this.initialBalance,
     currency: currency ?? this.currency,
     createdAt: createdAt ?? this.createdAt,
@@ -397,7 +366,6 @@ class Account extends DataClass implements Insertable<Account> {
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       name: data.name.present ? data.name.value : this.name,
-      type: data.type.present ? data.type.value : this.type,
       initialBalance: data.initialBalance.present
           ? data.initialBalance.value
           : this.initialBalance,
@@ -417,7 +385,6 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
-          ..write('type: $type, ')
           ..write('initialBalance: $initialBalance, ')
           ..write('currency: $currency, ')
           ..write('createdAt: $createdAt, ')
@@ -433,7 +400,6 @@ class Account extends DataClass implements Insertable<Account> {
     id,
     userId,
     name,
-    type,
     initialBalance,
     currency,
     createdAt,
@@ -448,7 +414,6 @@ class Account extends DataClass implements Insertable<Account> {
           other.id == this.id &&
           other.userId == this.userId &&
           other.name == this.name &&
-          other.type == this.type &&
           other.initialBalance == this.initialBalance &&
           other.currency == this.currency &&
           other.createdAt == this.createdAt &&
@@ -461,7 +426,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<String> id;
   final Value<String> userId;
   final Value<String> name;
-  final Value<String> type;
   final Value<double> initialBalance;
   final Value<String> currency;
   final Value<DateTime> createdAt;
@@ -473,7 +437,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.name = const Value.absent(),
-    this.type = const Value.absent(),
     this.initialBalance = const Value.absent(),
     this.currency = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -486,7 +449,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     required String id,
     required String userId,
     required String name,
-    required String type,
     required double initialBalance,
     this.currency = const Value.absent(),
     required DateTime createdAt,
@@ -497,7 +459,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   }) : id = Value(id),
        userId = Value(userId),
        name = Value(name),
-       type = Value(type),
        initialBalance = Value(initialBalance),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
@@ -505,7 +466,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? name,
-    Expression<String>? type,
     Expression<double>? initialBalance,
     Expression<String>? currency,
     Expression<DateTime>? createdAt,
@@ -518,7 +478,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (name != null) 'name': name,
-      if (type != null) 'type': type,
       if (initialBalance != null) 'initial_balance': initialBalance,
       if (currency != null) 'currency': currency,
       if (createdAt != null) 'created_at': createdAt,
@@ -533,7 +492,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<String>? id,
     Value<String>? userId,
     Value<String>? name,
-    Value<String>? type,
     Value<double>? initialBalance,
     Value<String>? currency,
     Value<DateTime>? createdAt,
@@ -546,7 +504,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
-      type: type ?? this.type,
       initialBalance: initialBalance ?? this.initialBalance,
       currency: currency ?? this.currency,
       createdAt: createdAt ?? this.createdAt,
@@ -568,9 +525,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
-    }
-    if (type.present) {
-      map['type'] = Variable<String>(type.value);
     }
     if (initialBalance.present) {
       map['initial_balance'] = Variable<double>(initialBalance.value);
@@ -602,7 +556,6 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
-          ..write('type: $type, ')
           ..write('initialBalance: $initialBalance, ')
           ..write('currency: $currency, ')
           ..write('createdAt: $createdAt, ')
@@ -669,23 +622,17 @@ class $CategoriesTable extends Categories
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
-  @override
-  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
-    'icon',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
   );
-  static const VerificationMeta _colorMeta = const VerificationMeta('color');
   @override
-  late final GeneratedColumn<String> color = GeneratedColumn<String>(
-    'color',
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
     aliasedName,
-    true,
-    type: DriftSqlType.string,
+    false,
+    type: DriftSqlType.int,
     requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -742,8 +689,7 @@ class $CategoriesTable extends Categories
     name,
     type,
     parentId,
-    icon,
-    color,
+    sortOrder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -796,16 +742,10 @@ class $CategoriesTable extends Categories
         parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
       );
     }
-    if (data.containsKey('icon')) {
+    if (data.containsKey('sort_order')) {
       context.handle(
-        _iconMeta,
-        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
-      );
-    }
-    if (data.containsKey('color')) {
-      context.handle(
-        _colorMeta,
-        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -868,14 +808,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.string,
         data['${effectivePrefix}parent_id'],
       ),
-      icon: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}icon'],
-      ),
-      color: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}color'],
-      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -907,8 +843,7 @@ class Category extends DataClass implements Insertable<Category> {
   final String name;
   final String type;
   final String? parentId;
-  final String? icon;
-  final String? color;
+  final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -919,8 +854,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.name,
     required this.type,
     this.parentId,
-    this.icon,
-    this.color,
+    required this.sortOrder,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -936,12 +870,7 @@ class Category extends DataClass implements Insertable<Category> {
     if (!nullToAbsent || parentId != null) {
       map['parent_id'] = Variable<String>(parentId);
     }
-    if (!nullToAbsent || icon != null) {
-      map['icon'] = Variable<String>(icon);
-    }
-    if (!nullToAbsent || color != null) {
-      map['color'] = Variable<String>(color);
-    }
+    map['sort_order'] = Variable<int>(sortOrder);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -960,10 +889,7 @@ class Category extends DataClass implements Insertable<Category> {
       parentId: parentId == null && nullToAbsent
           ? const Value.absent()
           : Value(parentId),
-      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
-      color: color == null && nullToAbsent
-          ? const Value.absent()
-          : Value(color),
+      sortOrder: Value(sortOrder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -984,8 +910,7 @@ class Category extends DataClass implements Insertable<Category> {
       name: serializer.fromJson<String>(json['name']),
       type: serializer.fromJson<String>(json['type']),
       parentId: serializer.fromJson<String?>(json['parentId']),
-      icon: serializer.fromJson<String?>(json['icon']),
-      color: serializer.fromJson<String?>(json['color']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -1001,8 +926,7 @@ class Category extends DataClass implements Insertable<Category> {
       'name': serializer.toJson<String>(name),
       'type': serializer.toJson<String>(type),
       'parentId': serializer.toJson<String?>(parentId),
-      'icon': serializer.toJson<String?>(icon),
-      'color': serializer.toJson<String?>(color),
+      'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -1016,8 +940,7 @@ class Category extends DataClass implements Insertable<Category> {
     String? name,
     String? type,
     Value<String?> parentId = const Value.absent(),
-    Value<String?> icon = const Value.absent(),
-    Value<String?> color = const Value.absent(),
+    int? sortOrder,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -1028,8 +951,7 @@ class Category extends DataClass implements Insertable<Category> {
     name: name ?? this.name,
     type: type ?? this.type,
     parentId: parentId.present ? parentId.value : this.parentId,
-    icon: icon.present ? icon.value : this.icon,
-    color: color.present ? color.value : this.color,
+    sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -1042,8 +964,7 @@ class Category extends DataClass implements Insertable<Category> {
       name: data.name.present ? data.name.value : this.name,
       type: data.type.present ? data.type.value : this.type,
       parentId: data.parentId.present ? data.parentId.value : this.parentId,
-      icon: data.icon.present ? data.icon.value : this.icon,
-      color: data.color.present ? data.color.value : this.color,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1061,8 +982,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('parentId: $parentId, ')
-          ..write('icon: $icon, ')
-          ..write('color: $color, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1078,8 +998,7 @@ class Category extends DataClass implements Insertable<Category> {
     name,
     type,
     parentId,
-    icon,
-    color,
+    sortOrder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -1094,8 +1013,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.name == this.name &&
           other.type == this.type &&
           other.parentId == this.parentId &&
-          other.icon == this.icon &&
-          other.color == this.color &&
+          other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -1108,8 +1026,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<String> name;
   final Value<String> type;
   final Value<String?> parentId;
-  final Value<String?> icon;
-  final Value<String?> color;
+  final Value<int> sortOrder;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -1121,8 +1038,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.name = const Value.absent(),
     this.type = const Value.absent(),
     this.parentId = const Value.absent(),
-    this.icon = const Value.absent(),
-    this.color = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1135,8 +1051,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     required String name,
     required String type,
     this.parentId = const Value.absent(),
-    this.icon = const Value.absent(),
-    this.color = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -1154,8 +1069,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<String>? name,
     Expression<String>? type,
     Expression<String>? parentId,
-    Expression<String>? icon,
-    Expression<String>? color,
+    Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -1168,8 +1082,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (name != null) 'name': name,
       if (type != null) 'type': type,
       if (parentId != null) 'parent_id': parentId,
-      if (icon != null) 'icon': icon,
-      if (color != null) 'color': color,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1184,8 +1097,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<String>? name,
     Value<String>? type,
     Value<String?>? parentId,
-    Value<String?>? icon,
-    Value<String?>? color,
+    Value<int>? sortOrder,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -1198,8 +1110,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       name: name ?? this.name,
       type: type ?? this.type,
       parentId: parentId ?? this.parentId,
-      icon: icon ?? this.icon,
-      color: color ?? this.color,
+      sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1226,11 +1137,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (parentId.present) {
       map['parent_id'] = Variable<String>(parentId.value);
     }
-    if (icon.present) {
-      map['icon'] = Variable<String>(icon.value);
-    }
-    if (color.present) {
-      map['color'] = Variable<String>(color.value);
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1258,8 +1166,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('parentId: $parentId, ')
-          ..write('icon: $icon, ')
-          ..write('color: $color, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -4765,7 +4672,6 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   required String id,
   required String userId,
   required String name,
-  required String type,
   required double initialBalance,
   Value<String> currency,
   required DateTime createdAt,
@@ -4778,7 +4684,6 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<String> id,
   Value<String> userId,
   Value<String> name,
-  Value<String> type,
   Value<double> initialBalance,
   Value<String> currency,
   Value<DateTime> createdAt,
@@ -4809,11 +4714,6 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4872,11 +4772,6 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<double> get initialBalance => $composableBuilder(
     column: $table.initialBalance,
     builder: (column) => ColumnOrderings(column),
@@ -4925,9 +4820,6 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
 
   GeneratedColumn<double> get initialBalance => $composableBuilder(
     column: $table.initialBalance,
@@ -4983,7 +4875,6 @@ class $$AccountsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<String> type = const Value.absent(),
                 Value<double> initialBalance = const Value.absent(),
                 Value<String> currency = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -4995,7 +4886,6 @@ class $$AccountsTableTableManager
                 id: id,
                 userId: userId,
                 name: name,
-                type: type,
                 initialBalance: initialBalance,
                 currency: currency,
                 createdAt: createdAt,
@@ -5009,7 +4899,6 @@ class $$AccountsTableTableManager
                 required String id,
                 required String userId,
                 required String name,
-                required String type,
                 required double initialBalance,
                 Value<String> currency = const Value.absent(),
                 required DateTime createdAt,
@@ -5021,7 +4910,6 @@ class $$AccountsTableTableManager
                 id: id,
                 userId: userId,
                 name: name,
-                type: type,
                 initialBalance: initialBalance,
                 currency: currency,
                 createdAt: createdAt,
@@ -5058,8 +4946,7 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   required String name,
   required String type,
   Value<String?> parentId,
-  Value<String?> icon,
-  Value<String?> color,
+  Value<int> sortOrder,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
@@ -5072,8 +4959,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<String> name,
   Value<String> type,
   Value<String?> parentId,
-  Value<String?> icon,
-  Value<String?> color,
+  Value<int> sortOrder,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -5115,13 +5001,8 @@ class $$CategoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get icon => $composableBuilder(
-    column: $table.icon,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get color => $composableBuilder(
-    column: $table.color,
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5180,13 +5061,8 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get icon => $composableBuilder(
-    column: $table.icon,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get color => $composableBuilder(
-    column: $table.color,
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5235,11 +5111,8 @@ class $$CategoriesTableAnnotationComposer
   GeneratedColumn<String> get parentId =>
       $composableBuilder(column: $table.parentId, builder: (column) => column);
 
-  GeneratedColumn<String> get icon =>
-      $composableBuilder(column: $table.icon, builder: (column) => column);
-
-  GeneratedColumn<String> get color =>
-      $composableBuilder(column: $table.color, builder: (column) => column);
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5289,8 +5162,7 @@ class $$CategoriesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<String?> parentId = const Value.absent(),
-                Value<String?> icon = const Value.absent(),
-                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5302,8 +5174,7 @@ class $$CategoriesTableTableManager
                 name: name,
                 type: type,
                 parentId: parentId,
-                icon: icon,
-                color: color,
+                sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5317,8 +5188,7 @@ class $$CategoriesTableTableManager
                 required String name,
                 required String type,
                 Value<String?> parentId = const Value.absent(),
-                Value<String?> icon = const Value.absent(),
-                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5330,8 +5200,7 @@ class $$CategoriesTableTableManager
                 name: name,
                 type: type,
                 parentId: parentId,
-                icon: icon,
-                color: color,
+                sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

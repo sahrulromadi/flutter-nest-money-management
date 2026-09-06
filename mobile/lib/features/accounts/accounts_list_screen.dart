@@ -57,19 +57,12 @@ class _AccountTile extends ConsumerWidget {
   final Account account;
   final VoidCallback onTap;
 
-  IconData get _typeIcon => switch (account.type) {
-        'Bank' => Icons.account_balance_outlined,
-        'Ewallet' => Icons.smartphone_outlined,
-        _ => Icons.payments_outlined,
-      };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balanceAsync = ref.watch(accountBalanceProvider(account));
     return ListTile(
-      leading: Icon(_typeIcon),
+      leading: const Icon(Icons.account_balance_wallet_outlined),
       title: Text(account.name),
-      subtitle: Text(account.type),
       trailing: balanceAsync.when(
         loading: () => const Skeleton(width: 64, height: 16),
         error: (error, stackTrace) => const Text('-'),

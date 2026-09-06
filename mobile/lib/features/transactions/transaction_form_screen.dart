@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../shared/category_visuals.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/num_pad.dart';
 import '../../shared/skeleton.dart';
@@ -225,11 +224,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   spacing: 8,
                   children: categories.map((c) {
                     return ChoiceChip(
-                      avatar: Icon(
-                        categoryIcon(c.icon),
-                        color: categoryColor(c.color),
-                        size: 18,
-                      ),
                       label: Text(c.name),
                       selected: _categoryId == c.id,
                       onSelected: (_) => setState(() => _categoryId = c.id),
