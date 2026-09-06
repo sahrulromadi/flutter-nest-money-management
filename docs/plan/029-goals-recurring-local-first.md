@@ -1,8 +1,22 @@
 # 029 — Semua Fitur Local-First (Goals, Recurring, Insights, Reminders)
 
-Status: Draft — belum dikerjakan
+Status: **SELESAI** (2026-09-06) — 4 item di branch `development`.
 Sumber: user. BE jarang dinyalain (jalan di laptop) → semua yang REST-only praktis mati.
 Fitur inti app = offline-first (PRD NFR).
+
+## Progress
+| Item | Commit | Verifikasi |
+|---|---|---|
+| 1 — Goals local-first | `372ce9c` | analyze clean, build_runner ok |
+| 2 — Recurring + generator mobile; BE scheduler dihapus | `ac243c1` | analyze clean, unit test (month clamp) pass, nest build + eslint clean |
+| 4 — Reminders local-first; BE reminders module dihapus | `a2dd635` | analyze clean, nest build + eslint clean |
+| 3 — Insights (budget + laporan) local-first | `66e7d49` | analyze clean, semua test pass |
+
+**Login sekarang cuma perlu buat Sync.** Semua fitur jalan offline.
+
+**Belum diverifikasi di device** (env eksekusi ga ada Android SDK): `flutter build apk`,
+generator recurring jalan pas launch di HP nyata, notif reminder ke-schedule, sync
+end-to-end (goals/recurring/budget/period ke Postgres).
 
 ## Audit: apa yang belum local-first
 | Fitur | Status sekarang | Item |
