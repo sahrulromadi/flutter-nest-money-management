@@ -69,6 +69,40 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final repo = ref.read(categoriesRepositoryProvider);
+    final count = await repo.transactionCount(widget.category!.id);
+    if (!mounted) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus kategori?'),
+        content: Text(
+          count == 0
+              ? 'Kategori "${widget.category!.name}" & subkategori-nya bakal dihapus.'
+              : 'Kategori "${widget.category!.name}" dipakai di $count transaksi. '
+                  'Transaksi lama tetap tersimpan. Kategori & subkategori-nya '
+                  'bakal dihapus. Lanjut?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    await repo.delete(widget.category!.id);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Cuma kategori top-level (parentId null) yang boleh dipilih jadi induk
@@ -132,6 +166,16 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 onPressed: _saving ? null : _submit,
                 child: Text(_isEdit ? 'Simpan' : 'Tambah'),
               ),
+              if (_isEdit) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _saving ? null : _delete,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  child: const Text('Hapus kategori'),
+                ),
+              ],
             ],
           ),
         ),

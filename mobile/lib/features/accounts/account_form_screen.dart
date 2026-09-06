@@ -51,6 +51,40 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _delete() async {
+    final repo = ref.read(accountsRepositoryProvider);
+    final count = await repo.transactionCount(widget.account!.id);
+    if (!mounted) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus akun?'),
+        content: Text(
+          count == 0
+              ? 'Akun "${widget.account!.name}" bakal dihapus.'
+              : 'Akun "${widget.account!.name}" dipakai di $count transaksi. '
+                  'Transaksi lama tetap tersimpan, tapi akun hilang dari daftar '
+                  '& total saldo. Lanjut hapus?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    await repo.delete(widget.account!.id);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +114,16 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 onPressed: _saving ? null : _submit,
                 child: Text(_isEdit ? 'Simpan' : 'Tambah'),
               ),
+              if (_isEdit) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _saving ? null : _delete,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  child: const Text('Hapus akun'),
+                ),
+              ],
             ],
           ),
         ),

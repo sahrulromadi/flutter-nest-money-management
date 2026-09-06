@@ -70,6 +70,9 @@ class AccountsRepository {
   Stream<List<Account>> watchAllIncludingDeleted(String userId) =>
       _accountsDao.watchAllIncludingDeleted(userId);
 
+  Future<int> transactionCount(String accountId) =>
+      _transactionsDao.countForAccount(accountId);
+
   Future<void> delete(String id) =>
       _accountsDao.softDelete(id, DateTime.now().toUtc());
 }

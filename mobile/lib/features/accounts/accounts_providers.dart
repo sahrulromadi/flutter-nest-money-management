@@ -25,3 +25,22 @@ final accountBalanceProvider =
     StreamProvider.autoDispose.family<double, Account>((ref, account) {
   return ref.watch(accountsRepositoryProvider).watchBalance(account);
 });
+
+/// Akun termasuk yang udah kehapus — buat lookup nama akun di row transaksi
+/// historis walau akunnya udah di-delete. Bukan buat picker.
+final _allAccountsProvider =
+    StreamProvider.autoDispose<List<Account>>((ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  if (userId == null) {
+    yield const [];
+    return;
+  }
+  yield* ref
+      .watch(accountsRepositoryProvider)
+      .watchAllIncludingDeleted(userId);
+});
+
+final accountsByIdProvider = Provider.autoDispose<Map<String, Account>>((ref) {
+  final list = ref.watch(_allAccountsProvider).valueOrNull ?? const <Account>[];
+  return {for (final a in list) a.id: a};
+});

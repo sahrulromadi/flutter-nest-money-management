@@ -305,14 +305,8 @@ class _AccountLabel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountsListProvider);
-    return accountsAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (e, _) => const SizedBox.shrink(),
-      data: (accounts) {
-        final match = accounts.where((a) => a.id == accountId);
-        return Text(match.isEmpty ? '' : match.first.name);
-      },
-    );
+    // Include-deleted: akun yang udah dihapus tetap kebaca di histori transaksi.
+    final name = ref.watch(accountsByIdProvider)[accountId]?.name ?? '';
+    return Text(name);
   }
 }
