@@ -18,6 +18,9 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Keyboard nutupin FAB + bottom nav (bukan ndorong FAB naik nangkring di
+      // atas keyboard). Form punya Scaffold sendiri buat resize kontennya.
+      resizeToAvoidBottomInset: false,
       body: navigationShell,
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/transactions/add'),
