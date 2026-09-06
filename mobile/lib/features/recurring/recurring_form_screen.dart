@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/money_field.dart';
 import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../categories/categories_providers.dart';
@@ -35,8 +36,8 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
   }
 
   Future<void> _submit() async {
-    final amount = double.tryParse(_amountController.text);
-    if (_accountId == null || _categoryId == null || amount == null || amount <= 0) {
+    final amount = moneyValue(_amountController.text).toDouble();
+    if (_accountId == null || _categoryId == null || amount <= 0) {
       setState(() => _error = 'Semua field wajib diisi bener');
       return;
     }
@@ -87,11 +88,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
             }).toList(),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Nominal'),
-          ),
+          MoneyField(controller: _amountController, label: 'Nominal'),
           const SizedBox(height: 16),
           accountsAsync.when(
             loading: () => const SkeletonChips(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/money_field.dart';
 import 'goals_providers.dart';
 
 class GoalFormScreen extends ConsumerStatefulWidget {
@@ -26,8 +27,8 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
   }
 
   Future<void> _submit() async {
-    final target = double.tryParse(_targetController.text);
-    if (_nameController.text.isEmpty || target == null || target <= 0) {
+    final target = moneyValue(_targetController.text).toDouble();
+    if (_nameController.text.isEmpty || target <= 0) {
       setState(() => _error = 'Nama & target wajib diisi bener');
       return;
     }
@@ -62,11 +63,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
             decoration: const InputDecoration(labelText: 'Nama goal'),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _targetController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Target nominal'),
-          ),
+          MoneyField(controller: _targetController, label: 'Target nominal'),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async {

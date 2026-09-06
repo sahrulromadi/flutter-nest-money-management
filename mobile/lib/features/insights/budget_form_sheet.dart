@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
+import '../../shared/money_field.dart';
 import '../../shared/skeleton.dart';
 import '../categories/categories_providers.dart';
 import 'insights_providers.dart';
@@ -36,8 +37,8 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
   }
 
   Future<void> _submit() async {
-    final limit = double.tryParse(_limitController.text);
-    if (_categoryId == null || limit == null || limit <= 0) {
+    final limit = moneyValue(_limitController.text).toDouble();
+    if (_categoryId == null || limit <= 0) {
       setState(() => _error = 'Kategori & limit wajib diisi');
       return;
     }
@@ -90,11 +91,7 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _limitController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Limit nominal'),
-          ),
+          MoneyField(controller: _limitController, label: 'Limit nominal'),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
