@@ -19,6 +19,27 @@ class RecurringRulesDao extends DatabaseAccessor<AppDatabase>
   Future<void> upsert(RecurringRulesCompanion row) =>
       into(recurringRules).insertOnConflictUpdate(row);
 
+  /// Rule yang jatuh tempo (buat generator, plan 029 — ganti cron backend).
+  Future<List<RecurringRule>> findDue(String userId, DateTime today) {
+    return (select(recurringRules)
+          ..where((t) =>
+              t.userId.equals(userId) &
+              t.deletedAt.isNull() &
+              t.nextRunDate.isSmallerOrEqualValue(today) &
+              (t.endDate.isNull() |
+                  t.endDate.isBiggerOrEqual(t.nextRunDate))))
+        .get();
+  }
+
+  Future<void> advanceNextRun(String id, DateTime next, DateTime now) =>
+      (update(recurringRules)..where((t) => t.id.equals(id))).write(
+        RecurringRulesCompanion(
+          nextRunDate: Value(next),
+          updatedAt: Value(now),
+          pendingSync: const Value(true),
+        ),
+      );
+
   Future<void> softDelete(String id, DateTime now) =>
       (update(recurringRules)..where((t) => t.id.equals(id))).write(
         RecurringRulesCompanion(

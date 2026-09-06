@@ -105,21 +105,4 @@ export class RecurringRulesRepository {
     );
     return (result.rowCount ?? 0) > 0;
   }
-
-  async findDueRules(): Promise<RecurringRule[]> {
-    const result = await this.pool.query<RecurringRule>(
-      `SELECT * FROM recurring_rules
-       WHERE deleted_at IS NULL
-         AND next_run_date <= CURRENT_DATE
-         AND (end_date IS NULL OR end_date >= CURRENT_DATE)`,
-    );
-    return result.rows;
-  }
-
-  async advanceNextRunDate(id: string, nextRunDate: string): Promise<void> {
-    await this.pool.query(
-      `UPDATE recurring_rules SET next_run_date = $2, updated_at = now() WHERE id = $1`,
-      [id, nextRunDate],
-    );
-  }
 }

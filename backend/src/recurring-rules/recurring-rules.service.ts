@@ -1,19 +1,14 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { addDays, addMonths, addWeeks } from 'date-fns';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AccountsRepository } from '../accounts/accounts.repository';
 import { CategoriesRepository } from '../categories/categories.repository';
-import { TransactionsRepository } from '../transactions/transactions.repository';
 import { RecurringRulesRepository } from './recurring-rules.repository';
 import { CreateRecurringRuleDto } from './dto/create-recurring-rule.dto';
 import { UpdateRecurringRuleDto } from './dto/update-recurring-rule.dto';
 
 @Injectable()
 export class RecurringRulesService {
-  private readonly logger = new Logger(RecurringRulesService.name);
-
   constructor(
     private readonly recurringRulesRepository: RecurringRulesRepository,
-    private readonly transactionsRepository: TransactionsRepository,
     private readonly accountsRepository: AccountsRepository,
     private readonly categoriesRepository: CategoriesRepository,
   ) {}
@@ -69,47 +64,5 @@ export class RecurringRulesService {
     if (!deleted) {
       throw new NotFoundException('Recurring rule tidak ditemukan');
     }
-  }
-
-  async generateDueTransactions(): Promise<number> {
-    const dueRules = await this.recurringRulesRepository.findDueRules();
-    for (const rule of dueRules) {
-      await this.transactionsRepository.create(rule.user_id, {
-        accountId: rule.account_id,
-        categoryId: rule.category_id,
-        type: rule.type,
-        amount: Number(rule.amount),
-        occurredAt: rule.next_run_date,
-        note: rule.note,
-        recurringRuleId: rule.id,
-      });
-
-      const nextRunDate = this.computeNextRunDate(
-        rule.next_run_date,
-        rule.interval_unit,
-        rule.interval_value,
-      );
-      await this.recurringRulesRepository.advanceNextRunDate(
-        rule.id,
-        nextRunDate,
-      );
-    }
-    this.logger.log(`Generated ${dueRules.length} recurring transaction(s)`);
-    return dueRules.length;
-  }
-
-  private computeNextRunDate(
-    fromDate: string,
-    unit: 'Day' | 'Week' | 'Month',
-    value: number,
-  ): string {
-    const date = new Date(`${fromDate}T00:00:00Z`);
-    const next =
-      unit === 'Day'
-        ? addDays(date, value)
-        : unit === 'Week'
-          ? addWeeks(date, value)
-          : addMonths(date, value);
-    return next.toISOString().slice(0, 10);
   }
 }

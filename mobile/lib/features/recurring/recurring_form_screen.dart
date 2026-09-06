@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../shared/money_field.dart';
 import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
+import '../auth/current_user_provider.dart';
 import '../categories/categories_providers.dart';
 import 'recurring_providers.dart';
 
@@ -46,7 +47,9 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
       _error = null;
     });
     try {
-      await ref.read(recurringRulesApiProvider).create(
+      final userId = await ref.read(currentUserIdProvider.future);
+      await ref.read(recurringRulesRepositoryProvider).create(
+            userId: userId!,
             accountId: _accountId!,
             categoryId: _categoryId!,
             type: _type,
@@ -55,7 +58,6 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
             intervalValue: _intervalValue,
             startDate: _startDate,
           );
-      ref.invalidate(recurringRulesListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());

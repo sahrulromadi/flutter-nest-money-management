@@ -59,6 +59,17 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     return row.read(transactions.id.count()) ?? 0;
   }
 
+  /// Ada transaksi dari rule ini di tanggal ini? — termasuk yang udah dihapus
+  /// (user hapus instance recurring = sengaja, jangan di-generate ulang).
+  Future<bool> existsForRule(String ruleId, DateTime occurredAt) async {
+    final row = await (selectOnly(transactions)
+          ..addColumns([transactions.id.count()])
+          ..where(transactions.recurringRuleId.equals(ruleId) &
+              transactions.occurredAt.equals(occurredAt)))
+        .getSingle();
+    return (row.read(transactions.id.count()) ?? 0) > 0;
+  }
+
   /// Total nominal transaksi (belum kehapus) yang di-tag ke goal ini — reaktif.
   /// Dipakai buat progress goal (plan 029, ganti perhitungan backend).
   Stream<double> watchGoalTotal(String goalId) {
