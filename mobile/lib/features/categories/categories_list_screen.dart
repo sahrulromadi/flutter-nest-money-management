@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,24 +47,46 @@ class CategoriesListScreen extends ConsumerWidget {
   }
 }
 
-class _CategoryTypeList extends ConsumerWidget {
+class _CategoryTypeList extends ConsumerStatefulWidget {
   const _CategoryTypeList({required this.type});
 
   final String type;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesAsync = ref.watch(categoriesListProvider(type));
+  ConsumerState<_CategoryTypeList> createState() => _CategoryTypeListState();
+}
+
+class _CategoryTypeListState extends ConsumerState<_CategoryTypeList> {
+  /// Urutan optimistik abis drag — dipakai sampai stream Drift nyusul,
+  /// biar item ga "mental balik" lalu lompat lagi.
+  List<Category>? _pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = categoriesListProvider(widget.type);
+    final categoriesAsync = ref.watch(provider);
+
+    // Begitu stream cocok sama urutan optimistik, lepas override-nya.
+    ref.listen(provider, (_, next) {
+      final list = next.valueOrNull;
+      if (list == null || _pending == null) return;
+      final streamIds =
+          list.where((c) => c.parentId == null).map((c) => c.id).toList();
+      final pendingIds = _pending!.map((c) => c.id).toList();
+      if (listEquals(streamIds, pendingIds)) setState(() => _pending = null);
+    });
 
     return categoriesAsync.when(
       loading: () => const SkeletonList(count: 5),
       error: (e, _) =>
-          AppErrorState(onRetry: () => ref.invalidate(categoriesListProvider(type))),
+          AppErrorState(onRetry: () => ref.invalidate(provider)),
       data: (categories) {
         if (categories.isEmpty) {
           return AppEmptyState.categories();
         }
-        final parents = categories.where((c) => c.parentId == null).toList();
+        final streamParents =
+            categories.where((c) => c.parentId == null).toList();
+        final parents = _pending ?? streamParents;
         final children = categories.where((c) => c.parentId != null).toList();
 
         return ReorderableListView.builder(
@@ -72,6 +95,7 @@ class _CategoryTypeList extends ConsumerWidget {
           onReorderItem: (oldIndex, newIndex) {
             final reordered = [...parents];
             reordered.insert(newIndex, reordered.removeAt(oldIndex));
+            setState(() => _pending = reordered);
             ref
                 .read(categoriesRepositoryProvider)
                 .reorder(reordered.map((c) => c.id).toList());
