@@ -10,8 +10,9 @@ export interface RecurringRule {
   type: 'Income' | 'Expense';
   amount: string;
   note: string | null;
-  interval_unit: 'Day' | 'Week' | 'Month';
+  interval_unit: 'Day' | 'Week' | 'Month' | 'DaysOfWeek';
   interval_value: number;
+  days_of_week: string | null;
   start_date: string;
   next_run_date: string;
   end_date: string | null;
@@ -34,14 +35,15 @@ export class RecurringRulesRepository {
       note?: string | null;
       intervalUnit: string;
       intervalValue: number;
+      daysOfWeek?: string | null;
       startDate: string;
       endDate?: string | null;
     },
   ): Promise<RecurringRule> {
     const result = await this.pool.query<RecurringRule>(
       `INSERT INTO recurring_rules
-         (user_id, account_id, category_id, type, amount, note, interval_unit, interval_value, start_date, next_run_date, end_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10)
+         (user_id, account_id, category_id, type, amount, note, interval_unit, interval_value, days_of_week, start_date, next_run_date, end_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10, $11)
        RETURNING *`,
       [
         userId,
@@ -52,6 +54,7 @@ export class RecurringRulesRepository {
         data.note ?? null,
         data.intervalUnit,
         data.intervalValue,
+        data.daysOfWeek ?? null,
         data.startDate,
         data.endDate ?? null,
       ],

@@ -17,4 +17,34 @@ void main() {
     expect(nextRecurringDate(DateTime(2028, 1, 31), 'Month', 1), DateTime(2028, 2, 29));
     expect(nextRecurringDate(DateTime(2026, 3, 31), 'Month', 1), DateTime(2026, 4, 30));
   });
+
+  test('DaysOfWeek — Sen-Jum skip weekend', () {
+    const weekdays = {1, 2, 3, 4, 5};
+    // 2026-09-04 = Jumat -> next weekday = Senin 2026-09-07
+    expect(
+      nextRecurringDate(DateTime(2026, 9, 4), 'DaysOfWeek', 1,
+          daysOfWeek: weekdays),
+      DateTime(2026, 9, 7),
+    );
+    // Senin -> Selasa
+    expect(
+      nextRecurringDate(DateTime(2026, 9, 7), 'DaysOfWeek', 1,
+          daysOfWeek: weekdays),
+      DateTime(2026, 9, 8),
+    );
+  });
+
+  test('DaysOfWeek — Sen/Rab/Jum', () {
+    const mwf = {1, 3, 5};
+    // Rabu 2026-09-09 -> Jumat 2026-09-11
+    expect(
+      nextRecurringDate(DateTime(2026, 9, 9), 'DaysOfWeek', 1, daysOfWeek: mwf),
+      DateTime(2026, 9, 11),
+    );
+    // Jumat -> Senin depan
+    expect(
+      nextRecurringDate(DateTime(2026, 9, 11), 'DaysOfWeek', 1, daysOfWeek: mwf),
+      DateTime(2026, 9, 14),
+    );
+  });
 }

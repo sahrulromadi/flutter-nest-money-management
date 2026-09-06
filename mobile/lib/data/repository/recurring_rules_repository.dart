@@ -20,6 +20,7 @@ class RecurringRulesRepository {
     String? note,
     required String intervalUnit,
     required int intervalValue,
+    String? daysOfWeek,
     required DateTime startDate,
     DateTime? endDate,
   }) {
@@ -36,6 +37,7 @@ class RecurringRulesRepository {
         note: Value(note),
         intervalUnit: intervalUnit,
         intervalValue: intervalValue,
+        daysOfWeek: Value(daysOfWeek),
         startDate: start,
         nextRunDate: start,
         endDate: Value(endDate == null

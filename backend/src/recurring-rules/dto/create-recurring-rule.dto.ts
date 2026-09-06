@@ -7,11 +7,12 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   Min,
 } from 'class-validator';
 
 const RULE_TYPES = ['Income', 'Expense'] as const;
-const INTERVAL_UNITS = ['Day', 'Week', 'Month'] as const;
+const INTERVAL_UNITS = ['Day', 'Week', 'Month', 'DaysOfWeek'] as const;
 
 export class CreateRecurringRuleDto {
   @ApiProperty()
@@ -44,6 +45,14 @@ export class CreateRecurringRuleDto {
   @IsInt()
   @Min(1)
   intervalValue!: number;
+
+  @ApiPropertyOptional({
+    description: 'CSV hari (1=Senin..7=Minggu) kalau intervalUnit=DaysOfWeek',
+    example: '1,2,3,4,5',
+  })
+  @IsOptional()
+  @Matches(/^[1-7](,[1-7])*$/)
+  daysOfWeek?: string;
 
   @ApiProperty()
   @IsDateString()

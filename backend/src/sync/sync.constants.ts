@@ -66,6 +66,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
       'note',
       'interval_unit',
       'interval_value',
+      'days_of_week',
       'start_date',
       'next_run_date',
       'end_date',

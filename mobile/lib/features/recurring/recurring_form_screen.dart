@@ -10,7 +10,14 @@ import '../categories/categories_providers.dart';
 import 'recurring_providers.dart';
 
 const _types = ['Expense', 'Income'];
-const _intervalUnits = ['Day', 'Week', 'Month'];
+const _intervalUnits = ['Day', 'Week', 'Month', 'DaysOfWeek'];
+const _unitLabels = {
+  'Day': 'Hari',
+  'Week': 'Minggu',
+  'Month': 'Bulan',
+  'DaysOfWeek': 'Hari tertentu',
+};
+const _dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 class RecurringFormScreen extends ConsumerStatefulWidget {
   const RecurringFormScreen({super.key});
@@ -26,6 +33,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
   final _amountController = TextEditingController();
   String _intervalUnit = 'Month';
   int _intervalValue = 1;
+  final Set<int> _daysOfWeek = {}; // 1=Sen..7=Min
   DateTime _startDate = DateTime.now();
   bool _saving = false;
   String? _error;
@@ -50,6 +58,10 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
       setState(() => _error = 'Pilih kategori dulu');
       return;
     }
+    if (_intervalUnit == 'DaysOfWeek' && _daysOfWeek.isEmpty) {
+      setState(() => _error = 'Pilih minimal 1 hari');
+      return;
+    }
     setState(() {
       _saving = true;
       _error = null;
@@ -63,7 +75,10 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
             type: _type,
             amount: amount,
             intervalUnit: _intervalUnit,
-            intervalValue: _intervalValue,
+            intervalValue: _intervalUnit == 'DaysOfWeek' ? 1 : _intervalValue,
+            daysOfWeek: _intervalUnit == 'DaysOfWeek'
+                ? (_daysOfWeek.toList()..sort()).join(',')
+                : null,
             startDate: _startDate,
           );
       if (mounted) Navigator.of(context).pop();
@@ -126,22 +141,42 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
             children: [
               const Text('Tiap'),
               const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                child: TextFormField(
-                  initialValue: '1',
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => _intervalValue = int.tryParse(v) ?? 1,
+              if (_intervalUnit != 'DaysOfWeek') ...[
+                SizedBox(
+                  width: 60,
+                  child: TextFormField(
+                    initialValue: '1',
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => _intervalValue = int.tryParse(v) ?? 1,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               DropdownButton<String>(
                 value: _intervalUnit,
-                items: _intervalUnits.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                items: _intervalUnits
+                    .map((u) => DropdownMenuItem(
+                        value: u, child: Text(_unitLabels[u] ?? u)))
+                    .toList(),
                 onChanged: (v) => setState(() => _intervalUnit = v!),
               ),
             ],
           ),
+          if (_intervalUnit == 'DaysOfWeek') ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              children: [
+                for (var i = 1; i <= 7; i++)
+                  FilterChip(
+                    label: Text(_dayLabels[i - 1]),
+                    selected: _daysOfWeek.contains(i),
+                    onSelected: (on) => setState(() =>
+                        on ? _daysOfWeek.add(i) : _daysOfWeek.remove(i)),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async {

@@ -1878,8 +1878,7 @@ class $RecurringRulesTable extends RecurringRules
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints:
-        'CHECK (interval_unit IN (\'Day\', \'Week\', \'Month\'))',
+    $customConstraints: 'CHECK (interval_unit IN (\'Day\', \'Week\', \'Month\', \'DaysOfWeek\'))',
   );
   static const VerificationMeta _intervalValueMeta = const VerificationMeta(
     'intervalValue',
@@ -1891,6 +1890,17 @@ class $RecurringRulesTable extends RecurringRules
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _daysOfWeekMeta = const VerificationMeta(
+    'daysOfWeek',
+  );
+  @override
+  late final GeneratedColumn<String> daysOfWeek = GeneratedColumn<String>(
+    'days_of_week',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _startDateMeta = const VerificationMeta(
     'startDate',
@@ -1984,6 +1994,7 @@ class $RecurringRulesTable extends RecurringRules
     note,
     intervalUnit,
     intervalValue,
+    daysOfWeek,
     startDate,
     nextRunDate,
     endDate,
@@ -2076,6 +2087,15 @@ class $RecurringRulesTable extends RecurringRules
       );
     } else if (isInserting) {
       context.missing(_intervalValueMeta);
+    }
+    if (data.containsKey('days_of_week')) {
+      context.handle(
+        _daysOfWeekMeta,
+        daysOfWeek.isAcceptableOrUnknown(
+          data['days_of_week']!,
+          _daysOfWeekMeta,
+        ),
+      );
     }
     if (data.containsKey('start_date')) {
       context.handle(
@@ -2178,6 +2198,10 @@ class $RecurringRulesTable extends RecurringRules
         DriftSqlType.int,
         data['${effectivePrefix}interval_value'],
       )!,
+      daysOfWeek: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}days_of_week'],
+      ),
       startDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_date'],
@@ -2225,6 +2249,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
   final String? note;
   final String intervalUnit;
   final int intervalValue;
+  final String? daysOfWeek;
   final DateTime startDate;
   final DateTime nextRunDate;
   final DateTime? endDate;
@@ -2242,6 +2267,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     this.note,
     required this.intervalUnit,
     required this.intervalValue,
+    this.daysOfWeek,
     required this.startDate,
     required this.nextRunDate,
     this.endDate,
@@ -2264,6 +2290,9 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     }
     map['interval_unit'] = Variable<String>(intervalUnit);
     map['interval_value'] = Variable<int>(intervalValue);
+    if (!nullToAbsent || daysOfWeek != null) {
+      map['days_of_week'] = Variable<String>(daysOfWeek);
+    }
     map['start_date'] = Variable<DateTime>(startDate);
     map['next_run_date'] = Variable<DateTime>(nextRunDate);
     if (!nullToAbsent || endDate != null) {
@@ -2289,6 +2318,9 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       intervalUnit: Value(intervalUnit),
       intervalValue: Value(intervalValue),
+      daysOfWeek: daysOfWeek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(daysOfWeek),
       startDate: Value(startDate),
       nextRunDate: Value(nextRunDate),
       endDate: endDate == null && nullToAbsent
@@ -2318,6 +2350,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       note: serializer.fromJson<String?>(json['note']),
       intervalUnit: serializer.fromJson<String>(json['intervalUnit']),
       intervalValue: serializer.fromJson<int>(json['intervalValue']),
+      daysOfWeek: serializer.fromJson<String?>(json['daysOfWeek']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       nextRunDate: serializer.fromJson<DateTime>(json['nextRunDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
@@ -2340,6 +2373,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       'note': serializer.toJson<String?>(note),
       'intervalUnit': serializer.toJson<String>(intervalUnit),
       'intervalValue': serializer.toJson<int>(intervalValue),
+      'daysOfWeek': serializer.toJson<String?>(daysOfWeek),
       'startDate': serializer.toJson<DateTime>(startDate),
       'nextRunDate': serializer.toJson<DateTime>(nextRunDate),
       'endDate': serializer.toJson<DateTime?>(endDate),
@@ -2360,6 +2394,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     Value<String?> note = const Value.absent(),
     String? intervalUnit,
     int? intervalValue,
+    Value<String?> daysOfWeek = const Value.absent(),
     DateTime? startDate,
     DateTime? nextRunDate,
     Value<DateTime?> endDate = const Value.absent(),
@@ -2377,6 +2412,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     note: note.present ? note.value : this.note,
     intervalUnit: intervalUnit ?? this.intervalUnit,
     intervalValue: intervalValue ?? this.intervalValue,
+    daysOfWeek: daysOfWeek.present ? daysOfWeek.value : this.daysOfWeek,
     startDate: startDate ?? this.startDate,
     nextRunDate: nextRunDate ?? this.nextRunDate,
     endDate: endDate.present ? endDate.value : this.endDate,
@@ -2402,6 +2438,9 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       intervalValue: data.intervalValue.present
           ? data.intervalValue.value
           : this.intervalValue,
+      daysOfWeek: data.daysOfWeek.present
+          ? data.daysOfWeek.value
+          : this.daysOfWeek,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       nextRunDate: data.nextRunDate.present
           ? data.nextRunDate.value
@@ -2428,6 +2467,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           ..write('note: $note, ')
           ..write('intervalUnit: $intervalUnit, ')
           ..write('intervalValue: $intervalValue, ')
+          ..write('daysOfWeek: $daysOfWeek, ')
           ..write('startDate: $startDate, ')
           ..write('nextRunDate: $nextRunDate, ')
           ..write('endDate: $endDate, ')
@@ -2450,6 +2490,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     note,
     intervalUnit,
     intervalValue,
+    daysOfWeek,
     startDate,
     nextRunDate,
     endDate,
@@ -2471,6 +2512,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           other.note == this.note &&
           other.intervalUnit == this.intervalUnit &&
           other.intervalValue == this.intervalValue &&
+          other.daysOfWeek == this.daysOfWeek &&
           other.startDate == this.startDate &&
           other.nextRunDate == this.nextRunDate &&
           other.endDate == this.endDate &&
@@ -2490,6 +2532,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
   final Value<String?> note;
   final Value<String> intervalUnit;
   final Value<int> intervalValue;
+  final Value<String?> daysOfWeek;
   final Value<DateTime> startDate;
   final Value<DateTime> nextRunDate;
   final Value<DateTime?> endDate;
@@ -2508,6 +2551,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.note = const Value.absent(),
     this.intervalUnit = const Value.absent(),
     this.intervalValue = const Value.absent(),
+    this.daysOfWeek = const Value.absent(),
     this.startDate = const Value.absent(),
     this.nextRunDate = const Value.absent(),
     this.endDate = const Value.absent(),
@@ -2527,6 +2571,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.note = const Value.absent(),
     required String intervalUnit,
     required int intervalValue,
+    this.daysOfWeek = const Value.absent(),
     required DateTime startDate,
     required DateTime nextRunDate,
     this.endDate = const Value.absent(),
@@ -2557,6 +2602,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Expression<String>? note,
     Expression<String>? intervalUnit,
     Expression<int>? intervalValue,
+    Expression<String>? daysOfWeek,
     Expression<DateTime>? startDate,
     Expression<DateTime>? nextRunDate,
     Expression<DateTime>? endDate,
@@ -2576,6 +2622,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       if (note != null) 'note': note,
       if (intervalUnit != null) 'interval_unit': intervalUnit,
       if (intervalValue != null) 'interval_value': intervalValue,
+      if (daysOfWeek != null) 'days_of_week': daysOfWeek,
       if (startDate != null) 'start_date': startDate,
       if (nextRunDate != null) 'next_run_date': nextRunDate,
       if (endDate != null) 'end_date': endDate,
@@ -2597,6 +2644,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Value<String?>? note,
     Value<String>? intervalUnit,
     Value<int>? intervalValue,
+    Value<String?>? daysOfWeek,
     Value<DateTime>? startDate,
     Value<DateTime>? nextRunDate,
     Value<DateTime?>? endDate,
@@ -2616,6 +2664,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       note: note ?? this.note,
       intervalUnit: intervalUnit ?? this.intervalUnit,
       intervalValue: intervalValue ?? this.intervalValue,
+      daysOfWeek: daysOfWeek ?? this.daysOfWeek,
       startDate: startDate ?? this.startDate,
       nextRunDate: nextRunDate ?? this.nextRunDate,
       endDate: endDate ?? this.endDate,
@@ -2657,6 +2706,9 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     if (intervalValue.present) {
       map['interval_value'] = Variable<int>(intervalValue.value);
     }
+    if (daysOfWeek.present) {
+      map['days_of_week'] = Variable<String>(daysOfWeek.value);
+    }
     if (startDate.present) {
       map['start_date'] = Variable<DateTime>(startDate.value);
     }
@@ -2696,6 +2748,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
           ..write('note: $note, ')
           ..write('intervalUnit: $intervalUnit, ')
           ..write('intervalValue: $intervalValue, ')
+          ..write('daysOfWeek: $daysOfWeek, ')
           ..write('startDate: $startDate, ')
           ..write('nextRunDate: $nextRunDate, ')
           ..write('endDate: $endDate, ')
@@ -5522,6 +5575,7 @@ typedef $$RecurringRulesTableCreateCompanionBuilder =
       Value<String?> note,
       required String intervalUnit,
       required int intervalValue,
+      Value<String?> daysOfWeek,
       required DateTime startDate,
       required DateTime nextRunDate,
       Value<DateTime?> endDate,
@@ -5542,6 +5596,7 @@ typedef $$RecurringRulesTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<String> intervalUnit,
       Value<int> intervalValue,
+      Value<String?> daysOfWeek,
       Value<DateTime> startDate,
       Value<DateTime> nextRunDate,
       Value<DateTime?> endDate,
@@ -5603,6 +5658,11 @@ class $$RecurringRulesTableFilterComposer
 
   ColumnFilters<int> get intervalValue => $composableBuilder(
     column: $table.intervalValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5696,6 +5756,11 @@ class $$RecurringRulesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get startDate => $composableBuilder(
     column: $table.startDate,
     builder: (column) => ColumnOrderings(column),
@@ -5774,6 +5839,11 @@ class $$RecurringRulesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
@@ -5842,6 +5912,7 @@ class $$RecurringRulesTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<String> intervalUnit = const Value.absent(),
                 Value<int> intervalValue = const Value.absent(),
+                Value<String?> daysOfWeek = const Value.absent(),
                 Value<DateTime> startDate = const Value.absent(),
                 Value<DateTime> nextRunDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
@@ -5860,6 +5931,7 @@ class $$RecurringRulesTableTableManager
                 note: note,
                 intervalUnit: intervalUnit,
                 intervalValue: intervalValue,
+                daysOfWeek: daysOfWeek,
                 startDate: startDate,
                 nextRunDate: nextRunDate,
                 endDate: endDate,
@@ -5880,6 +5952,7 @@ class $$RecurringRulesTableTableManager
                 Value<String?> note = const Value.absent(),
                 required String intervalUnit,
                 required int intervalValue,
+                Value<String?> daysOfWeek = const Value.absent(),
                 required DateTime startDate,
                 required DateTime nextRunDate,
                 Value<DateTime?> endDate = const Value.absent(),
@@ -5898,6 +5971,7 @@ class $$RecurringRulesTableTableManager
                 note: note,
                 intervalUnit: intervalUnit,
                 intervalValue: intervalValue,
+                daysOfWeek: daysOfWeek,
                 startDate: startDate,
                 nextRunDate: nextRunDate,
                 endDate: endDate,

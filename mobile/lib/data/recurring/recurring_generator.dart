@@ -21,8 +21,16 @@ class RecurringGenerator {
     var generated = 0;
 
     for (final rule in await _ruleDao.findDue(userId, today)) {
+      final dow = _parseDays(rule.daysOfWeek);
       var next = _dateOnly(rule.nextRunDate);
       final end = rule.endDate == null ? null : _dateOnly(rule.endDate!);
+
+      // Mode DaysOfWeek: kalau next jatuh di hari yang ga dipilih, maju dulu.
+      if (rule.intervalUnit == 'DaysOfWeek' && dow.isNotEmpty) {
+        while (!dow.contains(next.weekday)) {
+          next = next.add(const Duration(days: 1));
+        }
+      }
 
       while (!next.isAfter(today) && (end == null || !next.isAfter(end))) {
         if (!await _txnDao.existsForRule(rule.id, next)) {
@@ -43,7 +51,12 @@ class RecurringGenerator {
           );
           generated++;
         }
-        next = nextRecurringDate(next, rule.intervalUnit, rule.intervalValue);
+        next = nextRecurringDate(
+          next,
+          rule.intervalUnit,
+          rule.intervalValue,
+          daysOfWeek: dow,
+        );
       }
 
       await _ruleDao.advanceNextRun(rule.id, next, createdAt);
@@ -54,9 +67,19 @@ class RecurringGenerator {
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 }
 
+Set<int> _parseDays(String? csv) => (csv == null || csv.isEmpty)
+    ? const {}
+    : csv.split(',').map(int.parse).toSet();
+
 /// Tanggal jatuh tempo berikutnya. `Month` di-clamp ke hari terakhir bulan
-/// tujuan (31 Jan +1bln -> 28/29 Feb) — PRD #9.
-DateTime nextRecurringDate(DateTime from, String unit, int value) {
+/// tujuan (31 Jan +1bln -> 28/29 Feb) — PRD #9. `DaysOfWeek` = hari berikutnya
+/// yang weekday-nya ada di [daysOfWeek] (1=Senin..7=Minggu).
+DateTime nextRecurringDate(
+  DateTime from,
+  String unit,
+  int value, {
+  Set<int> daysOfWeek = const {},
+}) {
   switch (unit) {
     case 'Day':
       return from.add(Duration(days: value));
@@ -68,6 +91,13 @@ DateTime nextRecurringDate(DateTime from, String unit, int value) {
       final month = target % 12 + 1;
       final lastDay = DateTime(year, month + 1, 0).day;
       return DateTime(year, month, from.day < lastDay ? from.day : lastDay);
+    case 'DaysOfWeek':
+      if (daysOfWeek.isEmpty) return from.add(const Duration(days: 1));
+      var d = from.add(const Duration(days: 1));
+      while (!daysOfWeek.contains(d.weekday)) {
+        d = d.add(const Duration(days: 1));
+      }
+      return d;
     default:
       return from;
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/dismiss_background.dart';
@@ -41,7 +42,7 @@ class RecurringListScreen extends ConsumerWidget {
                 child: ListTile(
                   title: Text('${r.type} — ${formatRupiah(r.amount)}'),
                   subtitle: Text(
-                    'Tiap ${r.intervalValue} ${r.intervalUnit} · Berikutnya: '
+                    '${_scheduleLabel(r)} · Berikutnya: '
                     '${DateFormat('d MMM yyyy', 'id_ID').format(r.nextRunDate)}',
                   ),
                 ),
@@ -58,4 +59,19 @@ class RecurringListScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+const _unitId = {'Day': 'hari', 'Week': 'minggu', 'Month': 'bulan'};
+const _dayShort = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+String _scheduleLabel(RecurringRule r) {
+  if (r.intervalUnit == 'DaysOfWeek') {
+    final days = (r.daysOfWeek ?? '')
+        .split(',')
+        .where((s) => s.isNotEmpty)
+        .map((s) => _dayShort[int.parse(s) - 1])
+        .join(', ');
+    return 'Tiap $days';
+  }
+  return 'Tiap ${r.intervalValue} ${_unitId[r.intervalUnit] ?? r.intervalUnit}';
 }
