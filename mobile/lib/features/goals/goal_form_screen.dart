@@ -29,8 +29,12 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
 
   Future<void> _submit() async {
     final target = moneyValue(_targetController.text).toDouble();
-    if (_nameController.text.isEmpty || target <= 0) {
-      setState(() => _error = 'Nama & target wajib diisi bener');
+    if (_nameController.text.trim().isEmpty) {
+      setState(() => _error = 'Isi nama goal dulu');
+      return;
+    }
+    if (target <= 0) {
+      setState(() => _error = 'Isi target nominal dulu');
       return;
     }
     setState(() {

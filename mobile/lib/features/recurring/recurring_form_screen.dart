@@ -38,8 +38,16 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
 
   Future<void> _submit() async {
     final amount = moneyValue(_amountController.text).toDouble();
-    if (_accountId == null || _categoryId == null || amount <= 0) {
-      setState(() => _error = 'Semua field wajib diisi bener');
+    if (amount <= 0) {
+      setState(() => _error = 'Isi nominal dulu');
+      return;
+    }
+    if (_accountId == null) {
+      setState(() => _error = 'Pilih akun dulu');
+      return;
+    }
+    if (_categoryId == null) {
+      setState(() => _error = 'Pilih kategori dulu');
       return;
     }
     setState(() {

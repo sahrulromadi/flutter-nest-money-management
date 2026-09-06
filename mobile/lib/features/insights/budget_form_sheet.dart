@@ -38,8 +38,12 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
 
   Future<void> _submit() async {
     final limit = moneyValue(_limitController.text).toDouble();
-    if (_categoryId == null || limit <= 0) {
-      setState(() => _error = 'Kategori & limit wajib diisi');
+    if (_categoryId == null) {
+      setState(() => _error = 'Pilih kategori dulu');
+      return;
+    }
+    if (limit <= 0) {
+      setState(() => _error = 'Isi limit dulu');
       return;
     }
     setState(() {

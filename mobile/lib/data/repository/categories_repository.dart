@@ -8,6 +8,9 @@ import '../local/daos/transactions_dao.dart';
 class CategoryValidationException implements Exception {
   CategoryValidationException(this.message);
   final String message;
+
+  @override
+  String toString() => message;
 }
 
 class CategoriesRepository {

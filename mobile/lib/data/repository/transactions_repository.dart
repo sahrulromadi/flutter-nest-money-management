@@ -9,6 +9,9 @@ import '../local/daos/transactions_dao.dart';
 class TransactionValidationException implements Exception {
   TransactionValidationException(this.message);
   final String message;
+
+  @override
+  String toString() => message;
 }
 
 class TransactionsRepository {

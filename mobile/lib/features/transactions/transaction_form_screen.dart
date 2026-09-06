@@ -91,11 +91,19 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   Future<void> _submit() async {
     final amount = double.tryParse(_amount) ?? 0;
     if (amount <= 0) {
-      setState(() => _error = 'Nominal wajib diisi');
+      setState(() => _error = 'Isi nominal dulu');
       return;
     }
     if (_accountId == null) {
-      setState(() => _error = 'Akun wajib dipilih');
+      setState(() => _error = 'Pilih akun dulu');
+      return;
+    }
+    if (_type == 'Transfer' && _transferToAccountId == null) {
+      setState(() => _error = 'Pilih akun tujuan transfer');
+      return;
+    }
+    if (_type != 'Transfer' && _categoryId == null) {
+      setState(() => _error = 'Pilih kategori dulu');
       return;
     }
 
