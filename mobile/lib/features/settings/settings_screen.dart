@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/remote/server_url.dart';
+import 'sync_tile.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -15,6 +16,12 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Pengaturan')),
       body: ListView(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('SINKRONISASI'),
+          ),
+          const SyncTile(),
+          const Divider(),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: Text('SERVER'),

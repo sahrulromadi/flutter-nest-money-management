@@ -8,7 +8,6 @@ import '../categories/categories_list_screen.dart';
 import '../goals/goals_list_screen.dart';
 import '../recurring/recurring_list_screen.dart';
 import '../settings/settings_screen.dart';
-import 'sync_tile.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -71,7 +70,6 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           const Divider(),
-          const SyncTile(),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
             title: const Text('Pengaturan'),
