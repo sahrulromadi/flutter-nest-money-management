@@ -119,6 +119,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       if (_isEdit) {
         await repo.update(
           id: widget.transactionId!,
+          accountId: _accountId,
+          transferToAccountId:
+              _type == 'Transfer' ? _transferToAccountId : null,
           amount: amount,
           occurredAt: _occurredAt,
           categoryId: _type == 'Transfer' ? null : _categoryId,
@@ -211,9 +214,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   return ChoiceChip(
                     label: Text(a.name),
                     selected: _accountId == a.id,
-                    onSelected: _isEdit
-                        ? null
-                        : (_) => setState(() => _accountId = a.id),
+                    onSelected: (_) => setState(() => _accountId = a.id),
                   );
                 }).toList(),
               ),

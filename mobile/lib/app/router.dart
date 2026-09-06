@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/auth_state.dart';
 import '../features/auth/login_screen.dart';
+import '../features/accounts/accounts_list_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/insights/insights_screen.dart';
 import '../features/more/more_screen.dart';
@@ -43,8 +44,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/transactions',
-                builder: (context, state) => const TransactionsListScreen(),
+                path: '/accounts',
+                builder: (context, state) => const AccountsListScreen(),
               ),
             ],
           ),
@@ -67,6 +68,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       // Halaman penuh, di luar shell (sesuai DESIGN.md — bukan nested tab).
+      GoRoute(
+        path: '/transactions',
+        builder: (context, state) => const TransactionsListScreen(),
+      ),
       GoRoute(
         path: '/transactions/add',
         builder: (context, state) => const TransactionFormScreen(),

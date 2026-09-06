@@ -51,13 +51,14 @@ Target: Gen Z, gak mau ribet — minim tap ke aksi utama, angka jelas, copy sing
 ### Struktur navigasi
 Bottom nav 4 tab + FAB tengah (tombol "+" gede buat quick-add, selalu keliatan di layar manapun):
 
-`Home` — `Transactions` — `[+ FAB]` — `Insights` — `More`
+`Home` — `Akun` — `[+ FAB]` — `Insights` — `More`
 
-- **Home**: dashboard ringkas
-- **Transactions**: histori lengkap
+- **Home**: dashboard ringkas. Tap row transaksi → edit. "Lihat semua" → histori transaksi full-screen.
+- **Akun**: list akun + saldo (paling sering dibuka). (plan 032 — dulu tab ini "Transactions")
 - **[+]**: buka halaman penuh tambah transaksi (bukan sheet — biar fokus, gak keganggu konten belakang)
-- **Insights**: budget progress + laporan/grafik (Rilis 2 — tab tetep ada dari awal, isinya nyusul pas fitur budget/report jadi)
-- **More**: accounts, categories, goals (Rilis 3), settings (theme, PIN, logout)
+- **Insights**: budget progress + laporan/grafik, selector periode
+- **More**: categories, goals, recurring, sync, settings
+- **Transactions** (histori lengkap): bukan tab lagi — diakses dari "Lihat semua" di Home (halaman penuh).
 
 ### Layout per screen (Rilis 1)
 

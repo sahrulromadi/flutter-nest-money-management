@@ -7,10 +7,10 @@ class AppShell extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  static const _labels = ['Home', 'Transactions', 'Insights', 'More'];
+  static const _labels = ['Home', 'Akun', 'Insights', 'More'];
   static const _icons = [
     Icons.home_outlined,
-    Icons.receipt_long_outlined,
+    Icons.account_balance_wallet_outlined,
     Icons.insights_outlined,
     Icons.more_horiz,
   ];

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/notifications/notification_service.dart';
-import '../accounts/accounts_list_screen.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../categories/categories_list_screen.dart';
@@ -51,14 +50,6 @@ class MoreScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('More')),
       body: ListView(
         children: [
-          ListTile(
-            leading: const Icon(Icons.account_balance_wallet_outlined),
-            title: const Text('Akun'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AccountsListScreen()),
-            ),
-          ),
           ListTile(
             leading: const Icon(Icons.category_outlined),
             title: const Text('Kategori'),

@@ -80,6 +80,8 @@ class TransactionsRepository {
 
   Future<void> update({
     required String id,
+    String? accountId,
+    String? transferToAccountId,
     double? amount,
     DateTime? occurredAt,
     String? categoryId,
@@ -90,6 +92,11 @@ class TransactionsRepository {
     return _dao.updateFields(
       id,
       TransactionsCompanion(
+        accountId:
+            accountId != null ? Value(accountId) : const Value.absent(),
+        transferToAccountId: transferToAccountId != null
+            ? Value(transferToAccountId)
+            : const Value.absent(),
         amount: amount != null ? Value(amount) : const Value.absent(),
         occurredAt: occurredAt != null ? Value(occurredAt) : const Value.absent(),
         categoryId: categoryId != null ? Value(categoryId) : const Value.absent(),

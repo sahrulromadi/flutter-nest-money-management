@@ -40,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
                       Text('TRANSAKSI TERAKHIR',
                           style: Theme.of(context).textTheme.labelLarge),
                       TextButton(
-                        onPressed: () => context.go('/transactions'),
+                        onPressed: () => context.push('/transactions'),
                         child: const Text('Lihat semua'),
                       ),
                     ],
@@ -68,6 +68,8 @@ class HomeScreen extends ConsumerWidget {
                         children: transactions.map((t) {
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
+                            onTap: () =>
+                                context.push('/transactions/${t.id}/edit'),
                             leading: Icon(
                               switch (t.type) {
                                 'Income' => Icons.arrow_downward,
