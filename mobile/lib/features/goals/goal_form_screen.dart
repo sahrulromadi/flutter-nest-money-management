@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/money_field.dart';
+import '../auth/current_user_provider.dart';
 import 'goals_providers.dart';
 
 class GoalFormScreen extends ConsumerStatefulWidget {
@@ -37,12 +38,13 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
       _error = null;
     });
     try {
-      await ref.read(goalsApiProvider).create(
+      final userId = await ref.read(currentUserIdProvider.future);
+      await ref.read(goalsRepositoryProvider).create(
+            userId: userId!,
             name: _nameController.text,
             targetAmount: target,
             dueDate: _dueDate,
           );
-      ref.invalidate(goalsListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());

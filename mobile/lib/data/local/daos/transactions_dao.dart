@@ -59,6 +59,16 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     return row.read(transactions.id.count()) ?? 0;
   }
 
+  /// Total nominal transaksi (belum kehapus) yang di-tag ke goal ini — reaktif.
+  /// Dipakai buat progress goal (plan 029, ganti perhitungan backend).
+  Stream<double> watchGoalTotal(String goalId) {
+    final q = selectOnly(transactions)
+      ..addColumns([transactions.amount.sum()])
+      ..where(transactions.goalId.equals(goalId) &
+          transactions.deletedAt.isNull());
+    return q.watchSingle().map((r) => r.read(transactions.amount.sum()) ?? 0);
+  }
+
   /// Jumlah transaksi (belum kehapus) yang pakai kategori ini.
   Future<int> countForCategory(String categoryId) async {
     final q = selectOnly(transactions)
