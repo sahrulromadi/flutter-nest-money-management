@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/dismiss_background.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import 'goal_form_screen.dart';
@@ -66,12 +67,7 @@ class _GoalCard extends ConsumerWidget {
     return Dismissible(
       key: ValueKey(goal.id),
       direction: DismissDirection.endToStart,
-      background: Container(
-        color: semantic.danger,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete_outline, color: Colors.white),
-      ),
+      background: const DismissDeleteBackground(),
       onDismissed: (_) =>
           ref.read(goalsRepositoryProvider).delete(goal.id),
       child: Card(

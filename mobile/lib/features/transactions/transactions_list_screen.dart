@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/dismiss_background.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../accounts/accounts_providers.dart';
@@ -270,12 +271,7 @@ class _TransactionTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey(transaction.id),
       direction: DismissDirection.endToStart,
-      background: Container(
-        color: semantic.danger,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete_outline, color: Colors.white),
-      ),
+      background: const DismissDeleteBackground(),
       onDismissed: (_) =>
           ref.read(transactionsRepositoryProvider).delete(transaction.id),
       child: ListTile(

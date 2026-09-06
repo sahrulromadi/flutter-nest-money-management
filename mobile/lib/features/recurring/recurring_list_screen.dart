@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/dismiss_background.dart';
 import '../../shared/skeleton.dart';
 import 'recurring_form_screen.dart';
 import 'recurring_providers.dart';
@@ -36,7 +37,7 @@ class RecurringListScreen extends ConsumerWidget {
                 direction: DismissDirection.endToStart,
                 onDismissed: (_) =>
                     ref.read(recurringRulesRepositoryProvider).delete(r.id),
-                background: Container(color: Theme.of(context).colorScheme.error),
+                background: const DismissDeleteBackground(),
                 child: ListTile(
                   title: Text('${r.type} — ${formatRupiah(r.amount)}'),
                   subtitle: Text(

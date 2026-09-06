@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../data/local/app_database.dart';
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/dismiss_background.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
@@ -268,12 +269,7 @@ class _BudgetList extends ConsumerWidget {
             return Dismissible(
               key: ValueKey(it.budget.id),
               direction: DismissDirection.endToStart,
-              background: Container(
-                color: semantic.danger,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: const Icon(Icons.delete_outline, color: Colors.white),
-              ),
+              background: const DismissDeleteBackground(),
               onDismissed: (_) => ref
                   .read(budgetRepositoryProvider)
                   .deleteBudget(it.budget.id),
