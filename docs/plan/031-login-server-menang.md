@@ -1,6 +1,9 @@
 # 031 — Login: Notifikasi + Server Menang (Wipe Data Lokal)
 
-Status: Draft — belum dikerjakan
+Status: **SELESAI** (2026-09-06) — `0c9246f`. `reassignUserData` dihapus, `hasLocalData` +
+`wipeAll` ditambah, dialog konfirmasi di layar Login. Belum diverifikasi di device.
+Catatan: `login()` belum auto-trigger sync pull — data akun muncul pas user Sync manual
+(More → Sync) atau restart. Kalau mau auto-pull abis login, tambahin nanti.
 Sumber: user. Skenario bahaya: HP udah ada data lokal (mis. data coba-coba tanpa login),
 terus login ke akun yang **udah ada datanya di server** → sekarang data lokal ke-push ke
 akun itu (merge) → data campur / nabrak.

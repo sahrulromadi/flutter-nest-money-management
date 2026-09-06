@@ -1,6 +1,12 @@
 # 030 — Rename `budget_periods` → `periods` + Laporan per Periode
 
-Status: Draft — belum dikerjakan
+Status: **SELESAI** (2026-09-06). Item 1 `a5e60c9`, Item 2 `29a850b`.
+- Item 1: rename backend (migrasi Postgres + folder/class + endpoint `/periods`) + mobile
+  (Drift tables/daos/serializers + build_runner regen). Drift `MigrationStrategy` DIHAPUS,
+  `schemaVersion` balik ke 1 — APK fase dev, uninstall+install ulang tiap ubah schema.
+- Item 2: selector periode + "Ringkasan per Periode" + laporan re-scope ke periode terpilih
+  + budget read-only buat periode ditutup.
+- Belum diverifikasi di device.
 Sumber: user.
 - Periode itu konsep time-boxing umum (siklus gajian) yang nge-scope **semua** laporan
   (income/expense/breakdown/cashflow), bukan cuma budget. Nama `budget_periods` bikin
