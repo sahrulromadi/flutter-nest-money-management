@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsIn,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MinLength,
-} from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 const CATEGORY_TYPES = ['Income', 'Expense'] as const;
 
@@ -23,14 +17,4 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsUUID()
   parentId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  icon?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  color?: string;
 }

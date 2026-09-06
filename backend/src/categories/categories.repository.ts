@@ -8,8 +8,6 @@ export interface Category {
   name: string;
   type: 'Income' | 'Expense';
   parent_id: string | null;
-  icon: string | null;
-  color: string | null;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -26,21 +24,12 @@ export class CategoriesRepository {
       name: string;
       type: string;
       parentId?: string | null;
-      icon?: string | null;
-      color?: string | null;
     },
   ): Promise<Category> {
     const result = await this.pool.query<Category>(
-      `INSERT INTO categories (user_id, name, type, parent_id, icon, color)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [
-        userId,
-        data.name,
-        data.type,
-        data.parentId ?? null,
-        data.icon ?? null,
-        data.color ?? null,
-      ],
+      `INSERT INTO categories (user_id, name, type, parent_id)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [userId, data.name, data.type, data.parentId ?? null],
     );
     return result.rows[0];
   }
@@ -69,36 +58,27 @@ export class CategoriesRepository {
     userId: string,
     data: {
       name?: string;
-      icon?: string | null;
-      color?: string | null;
       sortOrder?: number | null;
     },
   ): Promise<Category | null> {
     const result = await this.pool.query<Category>(
       `UPDATE categories SET
          name = COALESCE($3, name),
-         icon = COALESCE($4, icon),
-         color = COALESCE($5, color),
-         sort_order = COALESCE($6, sort_order),
+         sort_order = COALESCE($4, sort_order),
          updated_at = now()
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
        RETURNING *`,
-      [
-        id,
-        userId,
-        data.name ?? null,
-        data.icon ?? null,
-        data.color ?? null,
-        data.sortOrder ?? null,
-      ],
+      [id, userId, data.name ?? null, data.sortOrder ?? null],
     );
     return result.rows[0] ?? null;
   }
 
+  /** Soft delete kategori + subkategori-nya (cascade) dalam 1 statement. */
   async softDelete(id: string, userId: string): Promise<boolean> {
     const result = await this.pool.query(
       `UPDATE categories SET deleted_at = now(), updated_at = now()
-       WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+       WHERE (id = $1 OR parent_id = $1)
+         AND user_id = $2 AND deleted_at IS NULL`,
       [id, userId],
     );
     return (result.rowCount ?? 0) > 0;

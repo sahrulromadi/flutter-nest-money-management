@@ -10,16 +10,6 @@ export class UpdateCategoryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  icon?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  color?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
   @IsInt()
   @Min(0)
   sortOrder?: number;
