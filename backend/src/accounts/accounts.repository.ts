@@ -8,8 +8,8 @@ export interface Account {
   name: string;
   initial_balance: string;
   currency: string;
-  created_at: Date;
   sort_order: number;
+  created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;
 }

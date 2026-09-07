@@ -8,11 +8,12 @@ CREATE TABLE recurring_rules (
   type TEXT NOT NULL CHECK (type IN ('Income', 'Expense')),
   amount NUMERIC(18,2) NOT NULL CHECK (amount > 0),
   note TEXT,
-  interval_unit TEXT NOT NULL CHECK (interval_unit IN ('Day', 'Week', 'Month')),
+  interval_unit TEXT NOT NULL CHECK (interval_unit IN ('Day', 'Week', 'Month', 'DaysOfWeek')),
   interval_value INT NOT NULL DEFAULT 1 CHECK (interval_value > 0),
   start_date DATE NOT NULL,
   next_run_date DATE NOT NULL,
   end_date DATE,
+  days_of_week TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ

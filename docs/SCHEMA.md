@@ -79,11 +79,12 @@ Unique constraint: `(period_id, category_id)`. (`budget_period_id` di-rename jad
 | type | TEXT | enum: Income / Expense |
 | amount | NUMERIC(18,2) | |
 | note | TEXT NULL | |
-| interval_unit | TEXT | enum: Day / Week / Month |
+| interval_unit | TEXT | enum: Day / Week / Month / DaysOfWeek |
 | interval_value | INT | misal tiap 2 minggu → unit=week, value=2 |
 | start_date | DATE | |
-| next_run_date | DATE | dipakai scheduler cari rule yang harus di-generate |
+| next_run_date | DATE | dipakai generator cari rule yang harus di-generate |
 | end_date | DATE NULL | opsional, stop otomatis |
+| days_of_week | TEXT NULL | CSV hari (1=Sen..7=Min) kalau interval_unit = DaysOfWeek (plan 034) |
 
 ## goals
 | Kolom | Tipe | Ket |
@@ -102,4 +103,7 @@ Unique constraint: `(period_id, category_id)`. (`budget_period_id` di-rename jad
 | Goal contribution | Kolom `goal_id` langsung di transactions | 1 transaksi = 1 goal, cukup buat kebutuhan sekarang; bisa naik ke join table nanti kalau perlu partial/multi-goal |
 
 ## Next
-DDL sudah dibuat sebagai migration `node-pg-migrate` di `backend/migrations/` (9 file, urut sesuai dependency FK: extensions → users → accounts → categories → goals → recurring_rules → transactions → budget_periods → budgets).
+DDL sebagai migration `node-pg-migrate` di `backend/migrations/`. Kolom `sort_order`
+(accounts, categories) & `days_of_week` (recurring_rules) di-fold ke migration CREATE
+asli — bukan ALTER terpisah — biar urutan kolom rapi (plan 035). Reset DB dev:
+`DROP SCHEMA public CASCADE; CREATE SCHEMA public;` lalu `npm run migrate:up`.

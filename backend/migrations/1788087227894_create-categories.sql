@@ -6,6 +6,7 @@ CREATE TABLE categories (
   name TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('Income', 'Expense')),
   parent_id UUID REFERENCES categories(id),
+  sort_order INTEGER NOT NULL DEFAULT 0,
   icon TEXT,
   color TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

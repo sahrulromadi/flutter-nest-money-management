@@ -12,10 +12,10 @@ export interface RecurringRule {
   note: string | null;
   interval_unit: 'Day' | 'Week' | 'Month' | 'DaysOfWeek';
   interval_value: number;
-  days_of_week: string | null;
   start_date: string;
   next_run_date: string;
   end_date: string | null;
+  days_of_week: string | null;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;
