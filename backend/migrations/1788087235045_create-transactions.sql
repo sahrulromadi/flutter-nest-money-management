@@ -16,7 +16,8 @@ CREATE TABLE transactions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ,
   CHECK (type <> 'Transfer' OR transfer_to_account_id IS NOT NULL),
-  CHECK (type = 'Transfer' OR category_id IS NOT NULL),
+  -- category_id boleh NULL buat transaksi turunan (penyesuaian saldo, biaya
+  -- transfer) — plan 028. Keharusan pilih kategori = aturan UX di client.
   CHECK (transfer_to_account_id IS NULL OR transfer_to_account_id <> account_id)
 );
 
