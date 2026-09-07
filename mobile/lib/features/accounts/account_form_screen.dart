@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
-import '../../shared/money_field.dart';
+import '../../shared/calc_amount_field.dart';
 import '../auth/current_user_provider.dart';
 import '../transactions/transactions_providers.dart';
 import 'accounts_providers.dart';
@@ -148,14 +148,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
               if (!_isEdit) ...[
                 const SizedBox(height: 16),
-                MoneyField(
+                CalcAmountField(
                   controller: _initialBalanceController,
                   label: 'Saldo awal',
                   validator: (_) => null,
                 ),
               ] else if (_snapshotBalance != null) ...[
                 const SizedBox(height: 16),
-                MoneyField(
+                CalcAmountField(
                   controller: _currentBalanceController,
                   label: 'Saldo saat ini',
                   validator: (_) => null,

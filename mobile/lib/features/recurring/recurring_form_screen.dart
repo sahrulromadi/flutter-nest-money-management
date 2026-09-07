@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../shared/money_field.dart';
+import '../../shared/calc_amount_field.dart';
 import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../auth/current_user_provider.dart';
@@ -114,7 +114,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
             }).toList(),
           ),
           const SizedBox(height: 16),
-          MoneyField(controller: _amountController, label: 'Nominal'),
+          CalcAmountField(controller: _amountController, label: 'Nominal'),
           const SizedBox(height: 16),
           accountsAsync.when(
             loading: () => const SkeletonChips(),

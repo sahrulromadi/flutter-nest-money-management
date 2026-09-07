@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/app_database.dart';
-import '../../shared/money_field.dart';
+import '../../shared/calc_amount_field.dart';
 import '../../shared/skeleton.dart';
 import '../categories/categories_providers.dart';
 import 'insights_providers.dart';
@@ -100,7 +100,8 @@ class _BudgetFormSheetState extends ConsumerState<BudgetFormSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          MoneyField(controller: _limitController, label: 'Limit nominal'),
+          CalcAmountField(
+              controller: _limitController, label: 'Limit nominal'),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

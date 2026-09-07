@@ -1,6 +1,11 @@
 # 035 — Akun ordering, kalkulator input, tampilan transaksi
 
-Status: Draft — belum dikerjakan
+Status: **SELESAI** (2026-09-07) — belum diverifikasi di device.
+- `753d38a` — Item 1: ordering akun via drag (sort_order).
+- `2716b77` — Item 3+4+5+6: tampilan transaksi (urut updated_at, nama kategori,
+  ikon berwarna, Home hari ini).
+- Item 2: kalkulator input (`calc_expression.dart` + `calc_pad.dart` +
+  `calc_amount_field.dart`, NumPad & MoneyField dibuang).
 Sumber: user (testing di device). 6 item.
 
 ---

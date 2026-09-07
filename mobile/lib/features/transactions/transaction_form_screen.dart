@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/calc_amount_field.dart';
+import '../../shared/calc_expression.dart';
+import '../../shared/calc_pad.dart';
 import '../../shared/currency_formatter.dart';
-import '../../shared/money_field.dart';
-import '../../shared/num_pad.dart';
 import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../auth/current_user_provider.dart';
@@ -26,7 +27,7 @@ class TransactionFormScreen extends ConsumerStatefulWidget {
 
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   String _type = 'Expense';
-  String _amount = '';
+  String _expr = '';
   String? _accountId;
   String? _transferToAccountId;
   String? _categoryId;
@@ -61,7 +62,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     if (t == null || !mounted) return;
     setState(() {
       _type = t.type;
-      _amount = t.amount.toStringAsFixed(0);
+      _expr = t.amount.toStringAsFixed(0);
       _accountId = t.accountId;
       _transferToAccountId = t.transferToAccountId;
       _categoryId = t.categoryId;
@@ -71,11 +72,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     });
   }
 
-  void _onDigit(String d) => setState(() => _amount += d);
+  void _onInput(String token) => setState(() => _expr += token);
 
   void _onBackspace() {
-    if (_amount.isEmpty) return;
-    setState(() => _amount = _amount.substring(0, _amount.length - 1));
+    if (_expr.isEmpty) return;
+    setState(() => _expr = _expr.substring(0, _expr.length - 1));
   }
 
   Future<void> _pickDate() async {
@@ -89,7 +90,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   }
 
   Future<void> _submit() async {
-    final amount = double.tryParse(_amount) ?? 0;
+    final amount = (evalExpression(_expr) ?? 0).toDouble();
     if (amount <= 0) {
       setState(() => _error = 'Isi nominal dulu');
       return;
@@ -195,13 +196,31 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             ),
             const SizedBox(height: 16),
             Center(
-              child: Text(
-                _amount.isEmpty ? formatRupiah(0) : formatRupiah(int.parse(_amount)),
-                style: Theme.of(context).textTheme.headlineMedium,
+              child: Column(
+                children: [
+                  Text(
+                    formatRupiah((evalExpression(_expr) ?? 0).round()),
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  if (hasOperator(_expr)) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      prettyExpression(_expr),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  if (_expr.isNotEmpty)
+                    TextButton(
+                      onPressed: () => setState(() => _expr = ''),
+                      child: const Text('Hapus semua'),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
-            Center(child: NumPad(onDigit: _onDigit, onBackspace: _onBackspace)),
+            Center(
+              child: CalcPad(onInput: _onInput, onBackspace: _onBackspace),
+            ),
             const SizedBox(height: 16),
             Text('Akun', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
@@ -242,7 +261,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               ),
               if (!_isEdit) ...[
                 const SizedBox(height: 16),
-                MoneyField(
+                CalcAmountField(
                   controller: _feeController,
                   label: 'Biaya admin (opsional)',
                   validator: (_) => null,

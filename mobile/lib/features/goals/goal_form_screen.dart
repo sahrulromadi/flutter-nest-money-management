@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../shared/money_field.dart';
+import '../../shared/calc_amount_field.dart';
 import '../auth/current_user_provider.dart';
 import 'goals_providers.dart';
 
@@ -70,7 +70,8 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
             decoration: const InputDecoration(labelText: 'Nama goal'),
           ),
           const SizedBox(height: 16),
-          MoneyField(controller: _targetController, label: 'Target nominal'),
+          CalcAmountField(
+              controller: _targetController, label: 'Target nominal'),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async {
