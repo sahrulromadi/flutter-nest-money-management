@@ -209,17 +209,16 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
-                  if (_expr.isNotEmpty)
-                    TextButton(
-                      onPressed: () => setState(() => _expr = ''),
-                      child: const Text('Hapus semua'),
-                    ),
                 ],
               ),
             ),
             const SizedBox(height: 8),
             Center(
-              child: CalcPad(onInput: _onInput, onBackspace: _onBackspace),
+              child: CalcPad(
+                onInput: _onInput,
+                onBackspace: _onBackspace,
+                onClear: () => setState(() => _expr = ''),
+              ),
             ),
             const SizedBox(height: 16),
             Text('Akun', style: Theme.of(context).textTheme.labelLarge),

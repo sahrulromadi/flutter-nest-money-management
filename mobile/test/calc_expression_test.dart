@@ -13,7 +13,7 @@ void main() {
       expect(evalExpression('2 × 2500 ÷ 2'), 2500);
       expect(evalExpression('10000 − 3000'), 7000);
     });
-    test('000', () => expect(evalExpression('15000+2000'), 17000));
+    test('penjumlahan', () => expect(evalExpression('15000+2000'), 17000));
     test('bagi nol → null', () => expect(evalExpression('100/0'), isNull));
     test('operator nyantol → null', () {
       expect(evalExpression('100+'), isNull);

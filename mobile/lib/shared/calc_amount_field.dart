@@ -27,6 +27,7 @@ class CalcAmountField extends StatelessWidget {
     final result = await showModalBottomSheet<num>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       builder: (_) => _CalcSheet(
         label: label,
         initial: seed > 0 ? '$seed' : '',
@@ -84,18 +85,7 @@ class _CalcSheetState extends State<_CalcSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(widget.label, style: theme.textTheme.titleMedium),
-              ),
-              if (_expr.isNotEmpty)
-                TextButton(
-                  onPressed: () => setState(() => _expr = ''),
-                  child: const Text('AC'),
-                ),
-            ],
-          ),
+          Text(widget.label, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
             _expr.isEmpty ? '0' : prettyExpression(_expr),
@@ -121,6 +111,7 @@ class _CalcSheetState extends State<_CalcSheet> {
                   _expr = _expr.substring(0, _expr.length - 1);
                 }
               }),
+              onClear: () => setState(() => _expr = ''),
             ),
           ),
           const SizedBox(height: 12),
