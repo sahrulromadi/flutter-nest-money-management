@@ -67,6 +67,10 @@ class AccountsRepository {
     );
   }
 
+  /// Urutan baru buat daftar id akun.
+  Future<void> reorder(List<String> orderedIds) =>
+      _accountsDao.reorder(orderedIds, DateTime.now().toUtc());
+
   Stream<List<Account>> watchAllIncludingDeleted(String userId) =>
       _accountsDao.watchAllIncludingDeleted(userId);
 

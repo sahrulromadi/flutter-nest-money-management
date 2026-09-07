@@ -12,8 +12,26 @@ class AccountsDao extends DatabaseAccessor<AppDatabase>
   Stream<List<Account>> watchAll(String userId) {
     return (select(accounts)
           ..where((t) => t.userId.equals(userId) & t.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.sortOrder),
+            (t) => OrderingTerm.asc(t.createdAt),
+          ]))
         .watch();
+  }
+
+  /// Set urutan baru buat daftar id akun (index = sort_order). Semua ditandai dirty.
+  Future<void> reorder(List<String> orderedIds, DateTime now) async {
+    await transaction(() async {
+      for (var i = 0; i < orderedIds.length; i++) {
+        await (update(accounts)..where((t) => t.id.equals(orderedIds[i]))).write(
+          AccountsCompanion(
+            sortOrder: Value(i),
+            updatedAt: Value(now),
+            pendingSync: const Value(true),
+          ),
+        );
+      }
+    });
   }
 
   /// Termasuk yang udah di-soft-delete — buat lookup nama akun di row

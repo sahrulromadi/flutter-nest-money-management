@@ -8,6 +8,8 @@ class Accounts extends Table {
   TextColumn get name => text()();
   RealColumn get initialBalance => real().named('initial_balance')();
   TextColumn get currency => text().withDefault(const Constant('IDR'))();
+  IntColumn get sortOrder =>
+      integer().named('sort_order').withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
   DateTimeColumn get updatedAt => dateTime().named('updated_at')();
   DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();

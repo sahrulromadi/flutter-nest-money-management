@@ -54,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
   // → `onUpgrade` DROP semua + createAll (data lokal ke-reset, ga perlu
   // uninstall manual). Migrasi stepwise beneran ditambah pas rilis.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

@@ -9,6 +9,7 @@ export interface Account {
   initial_balance: string;
   currency: string;
   created_at: Date;
+  sort_order: number;
   updated_at: Date;
   deleted_at: Date | null;
 }
@@ -31,7 +32,8 @@ export class AccountsRepository {
 
   async findAllByUser(userId: string): Promise<Account[]> {
     const result = await this.pool.query<Account>(
-      `SELECT * FROM accounts WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at`,
+      `SELECT * FROM accounts WHERE user_id = $1 AND deleted_at IS NULL
+       ORDER BY sort_order ASC, created_at ASC`,
       [userId],
     );
     return result.rows;
@@ -48,15 +50,16 @@ export class AccountsRepository {
   async update(
     id: string,
     userId: string,
-    data: { name?: string },
+    data: { name?: string; sortOrder?: number | null },
   ): Promise<Account | null> {
     const result = await this.pool.query<Account>(
       `UPDATE accounts SET
          name = COALESCE($3, name),
+         sort_order = COALESCE($4, sort_order),
          updated_at = now()
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
        RETURNING *`,
-      [id, userId, data.name ?? null],
+      [id, userId, data.name ?? null, data.sortOrder ?? null],
     );
     return result.rows[0] ?? null;
   }

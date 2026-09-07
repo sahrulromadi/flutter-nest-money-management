@@ -15,6 +15,7 @@ export const SYNC_TABLES: SyncTableConfig[] = [
       'name',
       'initial_balance',
       'currency',
+      'sort_order',
       'created_at',
       'updated_at',
       'deleted_at',
