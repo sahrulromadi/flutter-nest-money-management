@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/database_provider.dart';
 import '../../data/local/local_identity.dart';
+import '../../data/sync/sync_status_provider.dart';
 import '../../shared/karasuno_decor.dart';
 import 'auth_controller.dart';
 
@@ -35,34 +38,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
 
-    // plan 031 — server menang: kalau device ini punya data lokal (belum
-    // pernah login), konfirmasi dulu — login bakal HAPUS data lokal.
+    // plan 031 opsi C: kalau device ini punya data lokal (belum pernah login),
+    // tanya dulu — gabung ke akun, atau ganti pakai data akun (lokal dihapus).
+    var action = LocalDataAction.replace;
     final localId = await LocalIdentity.ensure();
     final hasLocal =
         await ref.read(appDatabaseProvider).hasLocalData(localId);
     if (hasLocal && mounted) {
-      final ok = await showDialog<bool>(
+      final choice = await showDialog<LocalDataAction>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Ganti dengan data akun?'),
+          title: const Text('Ada data di HP ini'),
           content: Text(
             'HP ini punya data yang belum masuk akun mana pun. Login ke '
-            '"${_emailController.text.trim()}" bakal MENGHAPUS data itu dan '
-            'ganti dengan data akun. Lanjut?',
+            '"${_emailController.text.trim()}":\n\n'
+            '• Gabung — data HP ini ikut naik ke akun\n'
+            '• Ganti — pakai data akun, data HP ini DIHAPUS',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
+              onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('Batal'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Login & Ganti'),
+              onPressed: () =>
+                  Navigator.of(ctx).pop(LocalDataAction.replace),
+              child: const Text('Ganti'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(LocalDataAction.merge),
+              child: const Text('Gabung'),
             ),
           ],
         ),
       );
-      if (ok != true) return;
+      if (choice == null) return;
+      action = choice;
     }
     if (!mounted) return;
 
@@ -71,9 +82,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .login(_emailController.text.trim(), _passwordController.text);
+      await ref.read(authControllerProvider.notifier).login(
+            _emailController.text.trim(),
+            _passwordController.text,
+            localData: action,
+          );
+      // Tarik data akun turun (+ push data lokal kalau tadi "Gabung").
+      unawaited(ref.read(syncStatusProvider.notifier).syncNow());
     } on DioException catch (e) {
       setState(() => _error = _messageFor(e));
     } catch (_) {

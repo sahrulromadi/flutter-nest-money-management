@@ -1,9 +1,15 @@
-# 031 — Login: Notifikasi + Server Menang (Wipe Data Lokal)
+# 031 — Login: Data Lokal → Gabung / Ganti
 
-Status: **SELESAI** (2026-09-06) — `0c9246f`. `reassignUserData` dihapus, `hasLocalData` +
-`wipeAll` ditambah, dialog konfirmasi di layar Login. Belum diverifikasi di device.
-Catatan: `login()` belum auto-trigger sync pull — data akun muncul pas user Sync manual
-(More → Sync) atau restart. Kalau mau auto-pull abis login, tambahin nanti.
+Status: **SELESAI** (2026-09-06).
+- `0c9246f` — server menang (wipe), `hasLocalData` + `wipeAll`, dialog konfirmasi.
+- **REVISI (`462415a`+)** — user minta opsi **C**: dialog kasih 2 pilihan:
+  - **Gabung** — `reassignUserData` (di-restore): data lokal di-re-tag ke user server +
+    dirty → sync push naik ke akun. Data lokal + akun kegabung.
+  - **Ganti** — `wipeAll` → pakai data akun aja.
+  - Batal → ga login.
+- `login()` sekarang **auto-trigger `syncNow()`** abis sukses (tarik data akun turun / push
+  data gabungan). `login(email, pass, {LocalDataAction localData})`.
+- Belum diverifikasi di device.
 Sumber: user. Skenario bahaya: HP udah ada data lokal (mis. data coba-coba tanpa login),
 terus login ke akun yang **udah ada datanya di server** → sekarang data lokal ke-push ke
 akun itu (merge) → data campur / nabrak.

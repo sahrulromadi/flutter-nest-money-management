@@ -109,7 +109,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Hapus SEMUA data lokal (semua tabel). Encryption key ga disentuh.
-  /// plan 031 — pas login, server menang.
+  /// plan 031 — pas login "Ganti (pakai data akun)".
   Future<void> wipeAll() async {
     await transaction(() async {
       await delete(budgets).go();
@@ -119,6 +119,31 @@ class AppDatabase extends _$AppDatabase {
       await delete(goals).go();
       await delete(categories).go();
       await delete(accounts).go();
+    });
+  }
+
+  /// Re-tag semua row lokal dari [from] ke [to] + tandai dirty — dipanggil pas
+  /// login "Gabung (data lokal ke akun)". Sync berikutnya push data ini ke server.
+  /// `budgets` ikut lewat period-nya (ga punya kolom user_id).
+  Future<void> reassignUserData(String from, String to) async {
+    if (from == to) return;
+    final owner = Value(to);
+    const dirty = Value(true);
+    await transaction(() async {
+      await (update(accounts)..where((t) => t.userId.equals(from)))
+          .write(AccountsCompanion(userId: owner, pendingSync: dirty));
+      await (update(categories)..where((t) => t.userId.equals(from)))
+          .write(CategoriesCompanion(userId: owner, pendingSync: dirty));
+      await (update(goals)..where((t) => t.userId.equals(from)))
+          .write(GoalsCompanion(userId: owner, pendingSync: dirty));
+      await (update(recurringRules)..where((t) => t.userId.equals(from)))
+          .write(RecurringRulesCompanion(userId: owner, pendingSync: dirty));
+      await (update(transactions)..where((t) => t.userId.equals(from)))
+          .write(TransactionsCompanion(userId: owner, pendingSync: dirty));
+      await (update(periods)..where((t) => t.userId.equals(from)))
+          .write(PeriodsCompanion(userId: owner, pendingSync: dirty));
+      await (update(budgets)..where((t) => t.deletedAt.isNull()))
+          .write(const BudgetsCompanion(pendingSync: dirty));
     });
   }
 
