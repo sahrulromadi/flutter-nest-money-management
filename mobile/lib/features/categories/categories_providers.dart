@@ -20,3 +20,24 @@ final categoriesListProvider =
   final repo = ref.watch(categoriesRepositoryProvider);
   yield* repo.watchAll(userId, type: type);
 });
+
+/// Kategori termasuk yang udah kehapus — buat lookup nama kategori di row
+/// transaksi historis walau kategorinya udah di-delete.
+final _allCategoriesProvider =
+    StreamProvider.autoDispose<List<Category>>((ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  if (userId == null) {
+    yield const [];
+    return;
+  }
+  yield* ref
+      .watch(categoriesRepositoryProvider)
+      .watchAllIncludingDeleted(userId);
+});
+
+final categoriesByIdProvider =
+    Provider.autoDispose<Map<String, Category>>((ref) {
+  final list =
+      ref.watch(_allCategoriesProvider).valueOrNull ?? const <Category>[];
+  return {for (final c in list) c.id: c};
+});

@@ -51,14 +51,3 @@ final transactionsListProvider =
     to: filter.to,
   );
 });
-
-final recentTransactionsProvider =
-    StreamProvider.autoDispose<List<Transaction>>((ref) async* {
-  final userId = await ref.watch(currentUserIdProvider.future);
-  if (userId == null) {
-    yield const [];
-    return;
-  }
-  final repo = ref.watch(transactionsRepositoryProvider);
-  yield* repo.watchRecent(userId);
-});

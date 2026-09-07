@@ -40,9 +40,6 @@ class TransactionsRepository {
         to: to,
       );
 
-  Stream<List<Transaction>> watchRecent(String userId, {int limit = 5}) =>
-      _dao.watchRecent(userId, limit: limit);
-
   Future<Transaction?> findById(String id) => _dao.findById(id);
 
   Future<void> create({

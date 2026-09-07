@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/local/app_database.dart';
 import '../accounts/accounts_providers.dart';
 import '../auth/current_user_provider.dart';
 import '../transactions/transactions_providers.dart';
@@ -35,6 +36,20 @@ final monthSnapshotProvider = Provider.autoDispose<AsyncValue<MonthSnapshot>>((r
   });
 });
 
-/// Alias biar nama di Home screen jelas — sumbernya sama kayak yang dipake
-/// Transactions tab (`recentTransactionsProvider`).
-final recentTransactionsForHomeProvider = recentTransactionsProvider;
+/// Transaksi yang `occurred_at`-nya hari ini, urut `updated_at` desc.
+final todayTransactionsProvider =
+    StreamProvider.autoDispose<List<Transaction>>((ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  if (userId == null) {
+    yield const [];
+    return;
+  }
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month, now.day);
+  final end = start
+      .add(const Duration(days: 1))
+      .subtract(const Duration(milliseconds: 1));
+  yield* ref
+      .watch(transactionsRepositoryProvider)
+      .watchAll(userId, from: start, to: end);
+});

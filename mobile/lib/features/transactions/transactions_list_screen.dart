@@ -10,7 +10,9 @@ import '../../shared/dismiss_background.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../accounts/accounts_providers.dart';
+import '../categories/categories_providers.dart';
 import '../home/home_providers.dart';
+import 'transaction_display.dart';
 import 'transactions_providers.dart';
 
 /// Filter akun aktif di halaman Transactions. `null` = semua akun.
@@ -228,7 +230,7 @@ class _GroupedList extends StatelessWidget {
   Widget build(BuildContext context) {
     final groups = <String, List<Transaction>>{};
     for (final t in transactions) {
-      final label = _dayLabel(t.occurredAt);
+      final label = _dayLabel(t.updatedAt.toLocal());
       groups.putIfAbsent(label, () => []).add(t);
     }
 
@@ -257,7 +259,8 @@ class _TransactionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semantic = context.semanticColors;
-    final color = switch (transaction.type) {
+    final visual = transactionTypeVisual(context, transaction.type);
+    final amountColor = switch (transaction.type) {
       'Income' => semantic.income,
       'Expense' => semantic.expense,
       _ => Theme.of(context).colorScheme.onSurface,
@@ -267,6 +270,8 @@ class _TransactionTile extends ConsumerWidget {
       'Expense' => '-',
       _ => '',
     };
+    final title =
+        transactionTitle(transaction, ref.watch(categoriesByIdProvider));
 
     return Dismissible(
       key: ValueKey(transaction.id),
@@ -275,18 +280,28 @@ class _TransactionTile extends ConsumerWidget {
       onDismissed: (_) =>
           ref.read(transactionsRepositoryProvider).delete(transaction.id),
       child: ListTile(
-        leading: Icon(
-          switch (transaction.type) {
-            'Income' => Icons.arrow_downward,
-            'Expense' => Icons.arrow_upward,
-            _ => Icons.swap_horiz,
-          },
-        ),
-        title: Text(transaction.note?.isNotEmpty == true ? transaction.note! : transaction.type),
+        leading: Icon(visual.icon, color: visual.color),
+        title: Text(title),
         subtitle: _AccountLabel(accountId: transaction.accountId),
-        trailing: Text(
-          '$sign${formatRupiah(transaction.amount)}',
-          style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '$sign${formatRupiah(transaction.amount)}',
+              style: TextStyle(color: amountColor, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              DateFormat('HH:mm').format(transaction.updatedAt.toLocal()),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.5),
+                  ),
+            ),
+          ],
         ),
         onTap: () => context.push('/transactions/${transaction.id}/edit'),
       ),

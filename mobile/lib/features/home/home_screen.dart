@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
 import '../../shared/karasuno_decor.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
+import '../categories/categories_providers.dart';
 import '../insights/insights_providers.dart';
+import '../transactions/transaction_display.dart';
 import 'home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -15,14 +18,14 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recentAsync = ref.watch(recentTransactionsForHomeProvider);
+    final recentAsync = ref.watch(todayTransactionsProvider);
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(totalBalanceProvider);
           ref.invalidate(monthSnapshotProvider);
-          ref.invalidate(recentTransactionsForHomeProvider);
+          ref.invalidate(todayTransactionsProvider);
         },
         child: ListView(
           padding: EdgeInsets.zero,
@@ -37,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('TRANSAKSI TERAKHIR',
+                      Text('TRANSAKSI HARI INI',
                           style: Theme.of(context).textTheme.labelLarge),
                       TextButton(
                         onPressed: () => context.push('/transactions'),
@@ -56,31 +59,51 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     error: (e, _) => AppErrorState(
                       onRetry: () =>
-                          ref.invalidate(recentTransactionsForHomeProvider),
+                          ref.invalidate(todayTransactionsProvider),
                     ),
                     data: (transactions) {
                       if (transactions.isEmpty) {
-                        return AppEmptyState.transactions(
-                          onAdd: () => context.push('/transactions/add'),
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: Text('Belum ada transaksi hari ini'),
+                          ),
                         );
                       }
+                      final categoriesById =
+                          ref.watch(categoriesByIdProvider);
                       return Column(
                         children: transactions.map((t) {
+                          final visual =
+                              transactionTypeVisual(context, t.type);
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             onTap: () =>
                                 context.push('/transactions/${t.id}/edit'),
-                            leading: Icon(
-                              switch (t.type) {
-                                'Income' => Icons.arrow_downward,
-                                'Expense' => Icons.arrow_upward,
-                                _ => Icons.swap_horiz,
-                              },
+                            leading: Icon(visual.icon, color: visual.color),
+                            title:
+                                Text(transactionTitle(t, categoriesById)),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(formatRupiah(t.amount)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  DateFormat('HH:mm')
+                                      .format(t.updatedAt.toLocal()),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                ),
+                              ],
                             ),
-                            title: Text(t.note?.isNotEmpty == true
-                                ? t.note!
-                                : t.type),
-                            trailing: Text(formatRupiah(t.amount)),
                           );
                         }).toList(),
                       );

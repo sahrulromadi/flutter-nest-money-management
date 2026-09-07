@@ -32,16 +32,8 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     if (to != null) {
       query.where((t) => t.occurredAt.isSmallerOrEqualValue(to));
     }
-    query.orderBy([(t) => OrderingTerm.desc(t.occurredAt)]);
+    query.orderBy([(t) => OrderingTerm.desc(t.updatedAt)]);
     return query.watch();
-  }
-
-  Stream<List<Transaction>> watchRecent(String userId, {int limit = 5}) {
-    return (select(transactions)
-          ..where((t) => t.userId.equals(userId) & t.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)])
-          ..limit(limit))
-        .watch();
   }
 
   Future<Transaction?> findById(String id) =>
