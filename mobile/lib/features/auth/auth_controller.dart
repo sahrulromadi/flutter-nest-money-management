@@ -18,9 +18,13 @@ class AuthController extends Notifier<AuthPhase> {
   }
 
   Future<void> _init() async {
-    state = await TokenStorage.hasTokens()
-        ? AuthPhase.unlocked
-        : AuthPhase.loggedOut;
+    try {
+      state = await TokenStorage.hasTokens()
+          ? AuthPhase.unlocked
+          : AuthPhase.loggedOut;
+    } catch (_) {
+      state = AuthPhase.loggedOut;
+    }
   }
 
   Future<void> login(String email, String password) async {

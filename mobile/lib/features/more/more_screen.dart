@@ -79,7 +79,16 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           const Divider(),
-          if (authPhase == AuthPhase.unlocked)
+          if (authPhase == AuthPhase.loading)
+            const ListTile(
+              leading: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              title: Text('Memuat...'),
+            )
+          else if (authPhase == AuthPhase.unlocked)
             ListTile(
               leading: Icon(Icons.logout,
                   color: Theme.of(context).colorScheme.error),
