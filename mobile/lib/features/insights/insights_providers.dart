@@ -88,8 +88,11 @@ final insightsSummaryProvider =
       .watchSummary(userId, r.from, r.to);
 });
 
-final categoryBreakdownProvider = StreamProvider.autoDispose<
-    List<({String categoryId, double total})>>((ref) async* {
+/// Breakdown per kategori buat 1 type ('Expense' / 'Income') di periode
+/// yang lagi dilihat. `categoryId` null = bucket "tanpa kategori".
+final categoryBreakdownProvider = StreamProvider.autoDispose
+    .family<List<({String? categoryId, double total})>, String>(
+        (ref, type) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
   if (userId == null) {
     yield const [];
@@ -99,7 +102,7 @@ final categoryBreakdownProvider = StreamProvider.autoDispose<
   yield* ref
       .watch(appDatabaseProvider)
       .transactionsDao
-      .watchCategoryBreakdown(userId, r.from, r.to);
+      .watchCategoryBreakdown(userId, type, r.from, r.to);
 });
 
 final cashflowTrendProvider = StreamProvider.autoDispose<
@@ -165,9 +168,9 @@ final budgetsWithProgressProvider =
     Provider.autoDispose<AsyncValue<List<BudgetProgress>>>((ref) {
   final budgetsAsync = ref.watch(_viewedBudgetsProvider);
   final spentByCat = {
-    for (final e in ref.watch(categoryBreakdownProvider).valueOrNull ??
-        const <({String categoryId, double total})>[])
-      e.categoryId: e.total,
+    for (final e in ref.watch(categoryBreakdownProvider('Expense')).valueOrNull ??
+        const <({String? categoryId, double total})>[])
+      if (e.categoryId != null) e.categoryId!: e.total,
   };
   return budgetsAsync.whenData((budgets) => [
         for (final b in budgets)

@@ -89,7 +89,12 @@ class InsightsScreen extends ConsumerWidget {
               Text('Breakdown Pengeluaran',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              const _CategoryBreakdownChart(),
+              const _CategoryBreakdownChart(type: 'Expense'),
+              const SizedBox(height: 24),
+              Text('Breakdown Pemasukan',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const _CategoryBreakdownChart(type: 'Income'),
             ],
           );
         },
@@ -365,11 +370,13 @@ class _CashflowChart extends ConsumerWidget {
 }
 
 class _CategoryBreakdownChart extends ConsumerWidget {
-  const _CategoryBreakdownChart();
+  const _CategoryBreakdownChart({required this.type});
+
+  final String type;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final breakdownAsync = ref.watch(categoryBreakdownProvider);
+    final breakdownAsync = ref.watch(categoryBreakdownProvider(type));
     final categoriesAsync = ref.watch(categoriesListProvider(null));
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -381,17 +388,20 @@ class _CategoryBreakdownChart extends ConsumerWidget {
           Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Skeleton(height: 16)),
         ],
       ),
-      error: (e, _) =>
-          AppErrorState(onRetry: () => ref.invalidate(categoryBreakdownProvider)),
+      error: (e, _) => AppErrorState(
+          onRetry: () => ref.invalidate(categoryBreakdownProvider(type))),
       data: (items) {
         if (items.isEmpty) return const Text('Belum ada data');
         final maxTotal =
             items.map((e) => e.total).reduce((a, b) => a > b ? a : b);
-        String nameOf(String id) => categoriesAsync.maybeWhen(
-              data: (cats) =>
-                  cats.where((c) => c.id == id).firstOrNull?.name ?? '?',
-              orElse: () => '…',
-            );
+        String nameOf(String? id) {
+          if (id == null) return 'Tanpa kategori';
+          return categoriesAsync.maybeWhen(
+            data: (cats) =>
+                cats.where((c) => c.id == id).firstOrNull?.name ?? '?',
+            orElse: () => '…',
+          );
+        }
         return Column(
           children: [
             for (var i = 0; i < items.length; i++)

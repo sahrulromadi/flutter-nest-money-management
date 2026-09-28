@@ -110,9 +110,12 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  /// Breakdown Expense per kategori (kategori NULL di-skip) dalam rentang — reaktif.
-  Stream<List<({String categoryId, double total})>> watchCategoryBreakdown(
+  /// Breakdown per kategori buat 1 [type] (Income/Expense) dalam rentang —
+  /// reaktif. `categoryId` null = transaksi tanpa kategori (penyesuaian
+  /// saldo, biaya transfer) dikumpulin jadi 1 bucket "tanpa kategori".
+  Stream<List<({String? categoryId, double total})>> watchCategoryBreakdown(
     String userId,
+    String type,
     DateTime from,
     DateTime to,
   ) {
@@ -120,13 +123,12 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
       ..where((t) =>
           t.userId.equals(userId) &
           t.deletedAt.isNull() &
-          t.type.equals('Expense') &
-          t.categoryId.isNotNull() &
+          t.type.equals(type) &
           t.occurredAt.isBetweenValues(from, to));
     return q.watch().map((rows) {
-      final byCat = <String, double>{};
+      final byCat = <String?, double>{};
       for (final t in rows) {
-        byCat.update(t.categoryId!, (v) => v + t.amount,
+        byCat.update(t.categoryId, (v) => v + t.amount,
             ifAbsent: () => t.amount);
       }
       return byCat.entries
