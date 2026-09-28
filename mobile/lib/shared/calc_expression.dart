@@ -3,7 +3,10 @@
 // integer non-negatif. Ga ada kurung, desimal, atau unary minus
 // (plan 035 item 2 — out of scope).
 
+import 'package:intl/intl.dart';
+
 final _opChars = RegExp(r'[+\-*/×÷−]');
+final _grouping = NumberFormat.decimalPattern('id_ID');
 
 /// Evaluasi [expr]. Return `null` kalau ekspresinya invalid (operator
 /// nyantol, karakter aneh, bagi nol).
@@ -62,11 +65,42 @@ num? evalExpression(String expr) {
 /// Ada operator di [expr]? (buat mutusin nampilin baris `= hasil` atau ngga.)
 bool hasOperator(String expr) => _opChars.hasMatch(expr);
 
-/// Versi tampil: `*` `/` `-` jadi `× ÷ −`.
-String prettyExpression(String expr) => expr
-    .replaceAll('*', ' × ')
-    .replaceAll('/', ' ÷ ')
-    .replaceAll('-', ' − ')
-    .replaceAll('+', ' + ')
-    .replaceAll(RegExp(r'\s+'), ' ')
-    .trim();
+/// Versi tampil: `*` `/` `-` jadi `× ÷ −`, tiap operand dikasih pemisah
+/// ribuan (`15000` -> `15.000`) biar gampang dibaca pas ngetik nominal gede.
+String prettyExpression(String expr) {
+  final out = StringBuffer();
+  final digits = StringBuffer();
+  void flushDigits() {
+    if (digits.isEmpty) return;
+    out.write(_grouping.format(int.parse(digits.toString())));
+    digits.clear();
+  }
+
+  for (var i = 0; i < expr.length; i++) {
+    final ch = expr[i];
+    if (ch.codeUnitAt(0) >= 0x30 && ch.codeUnitAt(0) <= 0x39) {
+      digits.write(ch);
+      continue;
+    }
+    flushDigits();
+    switch (ch) {
+      case '*':
+      case '×':
+        out.write(' × ');
+      case '/':
+      case '÷':
+        out.write(' ÷ ');
+      case '-':
+      case '−':
+        out.write(' − ');
+      case '+':
+        out.write(' + ');
+      case ' ':
+        break;
+      default:
+        out.write(ch);
+    }
+  }
+  flushDigits();
+  return out.toString();
+}

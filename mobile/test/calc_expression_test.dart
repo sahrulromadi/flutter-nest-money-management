@@ -31,7 +31,9 @@ void main() {
   });
 
   test('prettyExpression', () {
-    expect(prettyExpression('3*15000'), '3 × 15000');
-    expect(prettyExpression('2000+3*500'), '2000 + 3 × 500');
+    expect(prettyExpression('3*15000'), '3 × 15.000');
+    expect(prettyExpression('2000+3*500'), '2.000 + 3 × 500');
+    expect(prettyExpression('36000'), '36.000');
+    expect(prettyExpression('1000000-1'), '1.000.000 − 1');
   });
 }

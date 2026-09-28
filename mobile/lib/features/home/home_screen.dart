@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 
 import '../../shared/app_illustration.dart';
 import '../../shared/currency_formatter.dart';
+import '../../shared/dismiss_background.dart';
 import '../../shared/karasuno_decor.dart';
 import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../categories/categories_providers.dart';
 import '../insights/insights_providers.dart';
 import '../transactions/transaction_display.dart';
+import '../transactions/transactions_providers.dart';
 import 'home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -76,33 +78,42 @@ class HomeScreen extends ConsumerWidget {
                         children: transactions.map((t) {
                           final visual =
                               transactionTypeVisual(context, t.type);
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            onTap: () =>
-                                context.push('/transactions/${t.id}/edit'),
-                            leading: Icon(visual.icon, color: visual.color),
-                            title:
-                                Text(transactionTitle(t, categoriesById)),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(formatRupiah(t.amount)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  DateFormat('HH:mm')
-                                      .format(t.updatedAt.toLocal()),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.5),
-                                      ),
-                                ),
-                              ],
+                          return Dismissible(
+                            key: ValueKey(t.id),
+                            direction: DismissDirection.endToStart,
+                            background: const DismissDeleteBackground(),
+                            onDismissed: (_) => ref
+                                .read(transactionsRepositoryProvider)
+                                .delete(t.id),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              onTap: () =>
+                                  context.push('/transactions/${t.id}/edit'),
+                              leading:
+                                  Icon(visual.icon, color: visual.color),
+                              title:
+                                  Text(transactionTitle(t, categoriesById)),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(formatRupiah(t.amount)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    DateFormat('HH:mm')
+                                        .format(t.updatedAt.toLocal()),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.5),
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }).toList(),
