@@ -331,7 +331,9 @@ class _CashflowChart extends ConsumerWidget {
                       color: semantic.income,
                       isCurved: true,
                       barWidth: 2,
-                      dotData: const FlDotData(show: false),
+                      // show:true — periode baru sering cuma punya 1 hari data;
+                      // 1 titik tanpa dot ga kegambar sama sekali (garis butuh 2+).
+                      dotData: const FlDotData(show: true),
                     ),
                     LineChartBarData(
                       spots: [
@@ -341,7 +343,7 @@ class _CashflowChart extends ConsumerWidget {
                       color: semantic.expense,
                       isCurved: true,
                       barWidth: 2,
-                      dotData: const FlDotData(show: false),
+                      dotData: const FlDotData(show: true),
                     ),
                   ],
                 ),
