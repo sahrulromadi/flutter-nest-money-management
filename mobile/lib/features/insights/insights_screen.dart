@@ -43,7 +43,20 @@ class InsightsScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _PeriodSelector(periods: periods),
+              if (periods.isEmpty)
+                _PeriodSelector(periods: periods)
+              else
+                Row(
+                  children: [
+                    Expanded(child: _PeriodSelector(periods: periods)),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      tooltip: 'Mulai periode baru',
+                      onPressed: () => _startNewPeriod(context, ref),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 16),
               const _PeriodSummaries(),
               const SizedBox(height: 24),
