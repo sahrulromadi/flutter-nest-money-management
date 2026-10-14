@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -227,7 +226,7 @@ class _BudgetList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final budgetsAsync = ref.watch(budgetsWithProgressProvider);
-    final categoriesAsync = ref.watch(categoriesListProvider(null));
+    final categoriesById = ref.watch(categoriesByIdProvider);
     final semantic = context.semanticColors;
 
     return budgetsAsync.when(
@@ -251,11 +250,7 @@ class _BudgetList extends ConsumerWidget {
         }
         return Column(
           children: items.map((it) {
-            final categoryName = categoriesAsync.maybeWhen(
-              data: (cats) =>
-                  cats.where((c) => c.id == it.budget.categoryId).firstOrNull?.name,
-              orElse: () => null,
-            );
+            final categoryName = categoriesById[it.budget.categoryId]?.name;
             final color = it.pct >= 100
                 ? semantic.danger
                 : it.pct >= 80
@@ -377,7 +372,7 @@ class _CategoryBreakdownChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final breakdownAsync = ref.watch(categoryBreakdownProvider(type));
-    final categoriesAsync = ref.watch(categoriesListProvider(null));
+    final categoriesById = ref.watch(categoriesByIdProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return breakdownAsync.when(
@@ -396,11 +391,7 @@ class _CategoryBreakdownChart extends ConsumerWidget {
             items.map((e) => e.total).reduce((a, b) => a > b ? a : b);
         String nameOf(String? id) {
           if (id == null) return 'Tanpa kategori';
-          return categoriesAsync.maybeWhen(
-            data: (cats) =>
-                cats.where((c) => c.id == id).firstOrNull?.name ?? '?',
-            orElse: () => '…',
-          );
+          return categoriesById[id]?.name ?? '?';
         }
         return Column(
           children: [
