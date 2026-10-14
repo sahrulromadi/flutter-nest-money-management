@@ -11,7 +11,6 @@ import '../../shared/skeleton.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../accounts/accounts_providers.dart';
 import '../categories/categories_providers.dart';
-import '../home/home_providers.dart';
 import 'transaction_display.dart';
 import 'transactions_providers.dart';
 
@@ -52,9 +51,8 @@ class TransactionsListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Transaksi')),
       body: Column(
         children: [
-          const _SearchField(),
-          const _CategoryFilterChip(),
-          const _AccountBalanceStrip(),
+          const _SearchBar(),
+          const SizedBox(height: 8),
           Expanded(
             child: transactionsAsync.when(
               loading: () => const SkeletonList(count: 8),
@@ -84,57 +82,15 @@ class TransactionsListScreen extends ConsumerWidget {
   }
 }
 
-/// Dropdown filter kategori (semua type) di atas list — plan 036 item 1.
-class _CategoryFilterChip extends ConsumerWidget {
-  const _CategoryFilterChip();
+/// Search catatan + filter kategori (icon compact, popup menu) dalam 1 baris.
+class _SearchBar extends ConsumerStatefulWidget {
+  const _SearchBar();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesById = ref.watch(categoriesByIdProvider);
-    final selected = ref.watch(txnCategoryFilterProvider);
-    final expenseAsync = ref.watch(categoriesListProvider('Expense'));
-    final incomeAsync = ref.watch(categoriesListProvider('Income'));
-    final categories = [
-      ...expenseAsync.valueOrNull ?? const <Category>[],
-      ...incomeAsync.valueOrNull ?? const <Category>[],
-    ];
-    if (categories.isEmpty && selected == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: DropdownButtonFormField<String?>(
-        initialValue: selected,
-        decoration: const InputDecoration(
-          labelText: 'Kategori',
-          isDense: true,
-          border: OutlineInputBorder(),
-        ),
-        items: [
-          const DropdownMenuItem(value: null, child: Text('Semua kategori')),
-          for (final c in categories)
-            DropdownMenuItem(value: c.id, child: Text(c.name)),
-          // Kategori ke-hapus/sistem yang lagi di-filter tapi ga ada di picker
-          // biasa — tetep tampil biar dropdown-nya ga "lupa" pilihan lama.
-          if (selected != null && categories.every((c) => c.id != selected))
-            DropdownMenuItem(
-              value: selected,
-              child: Text(categoriesById[selected]?.name ?? '?'),
-            ),
-        ],
-        onChanged: (v) => ref.read(txnCategoryFilterProvider.notifier).state = v,
-      ),
-    );
-  }
+  ConsumerState<_SearchBar> createState() => _SearchBarState();
 }
 
-class _SearchField extends ConsumerStatefulWidget {
-  const _SearchField();
-
-  @override
-  ConsumerState<_SearchField> createState() => _SearchFieldState();
-}
-
-class _SearchFieldState extends ConsumerState<_SearchField> {
+class _SearchBarState extends ConsumerState<_SearchBar> {
   late final _controller =
       TextEditingController(text: ref.read(txnSearchQueryProvider));
 
@@ -149,25 +105,108 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
     final hasQuery = ref.watch(txnSearchQueryProvider).isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: TextField(
-        controller: _controller,
-        decoration: InputDecoration(
-          hintText: 'Cari catatan',
-          prefixIcon: const Icon(Icons.search),
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          suffixIcon: hasQuery
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _controller.clear();
-                    ref.read(txnSearchQueryProvider.notifier).state = '';
-                  },
-                )
-              : null,
-        ),
-        onChanged: (v) => ref.read(txnSearchQueryProvider.notifier).state = v,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: 'Cari catatan',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                suffixIcon: hasQuery
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _controller.clear();
+                          ref.read(txnSearchQueryProvider.notifier).state = '';
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (v) => ref.read(txnSearchQueryProvider.notifier).state = v,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const _CategoryFilterButton(),
+          const SizedBox(width: 4),
+          const _AccountFilterButton(),
+        ],
       ),
+    );
+  }
+}
+
+/// Filter kategori — icon button + popup menu, biar ringkas (plan 036 item 1).
+class _CategoryFilterButton extends ConsumerWidget {
+  const _CategoryFilterButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesById = ref.watch(categoriesByIdProvider);
+    final selected = ref.watch(txnCategoryFilterProvider);
+    final expenseAsync = ref.watch(categoriesListProvider('Expense'));
+    final incomeAsync = ref.watch(categoriesListProvider('Income'));
+    final categories = [
+      ...expenseAsync.valueOrNull ?? const <Category>[],
+      ...incomeAsync.valueOrNull ?? const <Category>[],
+    ];
+    if (categories.isEmpty && selected == null) return const SizedBox.shrink();
+    final active = selected != null;
+
+    return PopupMenuButton<String?>(
+      tooltip: 'Filter kategori',
+      icon: Icon(
+        Icons.filter_list,
+        color: active ? Theme.of(context).colorScheme.primary : null,
+      ),
+      onSelected: (v) => ref.read(txnCategoryFilterProvider.notifier).state = v,
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: null, child: Text('Semua kategori')),
+        for (final c in categories)
+          PopupMenuItem(value: c.id, child: Text(c.name)),
+        // Kategori ke-hapus/sistem yang lagi di-filter tapi ga ada di picker
+        // biasa — tetep tampil biar pilihan lama ga "ketelen".
+        if (selected != null && categories.every((c) => c.id != selected))
+          PopupMenuItem(
+            value: selected,
+            child: Text(categoriesById[selected]?.name ?? '?'),
+          ),
+      ],
+    );
+  }
+}
+
+/// Filter akun — icon button + popup menu (plan 036: balance card dicabut,
+/// datanya udah ada di tab Akun).
+class _AccountFilterButton extends ConsumerWidget {
+  const _AccountFilterButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accountsById = ref.watch(accountsByIdProvider);
+    final selected = ref.watch(txnAccountFilterProvider);
+    final accounts = ref.watch(accountsListProvider).valueOrNull ?? const <Account>[];
+    if (accounts.isEmpty && selected == null) return const SizedBox.shrink();
+    final active = selected != null;
+
+    return PopupMenuButton<String?>(
+      tooltip: 'Filter akun',
+      icon: Icon(
+        Icons.account_balance_wallet_outlined,
+        color: active ? Theme.of(context).colorScheme.primary : null,
+      ),
+      onSelected: (v) => ref.read(txnAccountFilterProvider.notifier).state = v,
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: null, child: Text('Semua akun')),
+        for (final a in accounts) PopupMenuItem(value: a.id, child: Text(a.name)),
+        if (selected != null && accounts.every((a) => a.id != selected))
+          PopupMenuItem(
+            value: selected,
+            child: Text(accountsById[selected]?.name ?? '?'),
+          ),
+      ],
     );
   }
 }
@@ -180,133 +219,6 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(child: Text(message));
-  }
-}
-
-/// Strip horizontal saldo per akun di atas list. Chip "Semua" (total gabungan)
-/// + 1 chip per akun. Tap → filter list ke akun itu (`txnAccountFilterProvider`).
-class _AccountBalanceStrip extends ConsumerWidget {
-  const _AccountBalanceStrip();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountsListProvider);
-    return accountsAsync.maybeWhen(
-      data: (accounts) {
-        if (accounts.isEmpty) return const SizedBox.shrink();
-        return SizedBox(
-          height: 92,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            children: [
-              const _TotalBalanceCard(),
-              for (final a in accounts) _AccountBalanceCard(account: a),
-            ],
-          ),
-        );
-      },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _TotalBalanceCard extends ConsumerWidget {
-  const _TotalBalanceCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final total = ref.watch(totalBalanceProvider);
-    final selected = ref.watch(txnAccountFilterProvider) == null;
-    return _BalanceCard(
-      label: 'Semua',
-      value: total.maybeWhen(
-        data: (v) => formatRupiah(v),
-        orElse: () => '…',
-      ),
-      selected: selected,
-      onTap: () => ref.read(txnAccountFilterProvider.notifier).state = null,
-    );
-  }
-}
-
-class _AccountBalanceCard extends ConsumerWidget {
-  const _AccountBalanceCard({required this.account});
-
-  final Account account;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final balance = ref.watch(accountBalanceProvider(account));
-    final selected = ref.watch(txnAccountFilterProvider) == account.id;
-    return _BalanceCard(
-      label: account.name,
-      value: balance.maybeWhen(
-        data: (v) => formatRupiah(v),
-        orElse: () => '…',
-      ),
-      selected: selected,
-      onTap: () =>
-          ref.read(txnAccountFilterProvider.notifier).state = account.id,
-    );
-  }
-}
-
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({
-    required this.label,
-    required this.value,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 140,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: selected ? scheme.primaryContainer : scheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? scheme.primary : scheme.outline,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 

@@ -159,6 +159,7 @@ class _DebtCard extends ConsumerWidget {
       background: const DismissDeleteBackground(),
       onDismissed: (_) => ref.read(debtsRepositoryProvider).delete(debt.id),
       child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
         child: InkWell(
           onTap: () => _openForm(context, debt: debt),
           child: Padding(
