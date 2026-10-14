@@ -12,6 +12,7 @@ import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
 import '../auth/current_user_provider.dart';
 import '../categories/categories_providers.dart';
+import '../transactions/category_transactions_screen.dart';
 import 'budget_form_sheet.dart';
 import 'insights_providers.dart';
 
@@ -373,6 +374,7 @@ class _CategoryBreakdownChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final breakdownAsync = ref.watch(categoryBreakdownProvider(type));
     final categoriesById = ref.watch(categoriesByIdProvider);
+    final range = ref.watch(reportRangeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return breakdownAsync.when(
@@ -396,32 +398,46 @@ class _CategoryBreakdownChart extends ConsumerWidget {
         return Column(
           children: [
             for (var i = 0; i < items.length; i++)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 90,
-                      child: Text(nameOf(items[i].categoryId),
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    Expanded(
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor:
-                            maxTotal == 0 ? 0 : (items[i].total / maxTotal),
-                        child: Container(
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: ChartColors.categorical(i, isDark: isDark),
-                            borderRadius: BorderRadius.circular(4),
+              InkWell(
+                onTap: items[i].categoryId == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CategoryTransactionsScreen(
+                              categoryId: items[i].categoryId!,
+                              title: nameOf(items[i].categoryId),
+                              from: range.from,
+                              to: range.to,
+                            ),
+                          ),
+                        ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 90,
+                        child: Text(nameOf(items[i].categoryId),
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                      Expanded(
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor:
+                              maxTotal == 0 ? 0 : (items[i].total / maxTotal),
+                          child: Container(
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: ChartColors.categorical(i, isDark: isDark),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(formatRupiah(items[i].total)),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(formatRupiah(items[i].total)),
+                    ],
+                  ),
                 ),
               ),
           ],

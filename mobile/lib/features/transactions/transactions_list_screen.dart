@@ -18,20 +18,47 @@ import 'transactions_providers.dart';
 /// Filter akun aktif di halaman Transactions. `null` = semua akun.
 final txnAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
 
+/// Kata kunci search transaksi (nama/catatan, kategori, akun) — plan 036 item 1.
+final txnSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
+
+/// Transaksi yang match [query] di catatan, nama kategori, atau nama akun
+/// (case-insensitive substring). Kosong = ga difilter.
+List<Transaction> filterTransactionsBySearch(
+  List<Transaction> transactions,
+  String query,
+  Map<String, Category> categoriesById,
+  Map<String, Account> accountsById,
+) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return transactions;
+  return transactions.where((t) {
+    if (t.note?.toLowerCase().contains(q) == true) return true;
+    final catName =
+        t.categoryId == null ? null : categoriesById[t.categoryId]?.name;
+    if (catName != null && catName.toLowerCase().contains(q)) return true;
+    final accName = accountsById[t.accountId]?.name;
+    return accName != null && accName.toLowerCase().contains(q);
+  }).toList();
+}
+
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountId = ref.watch(txnAccountFilterProvider);
+    final query = ref.watch(txnSearchQueryProvider);
     final transactionsAsync = ref.watch(
       transactionsListProvider(TransactionFilter(accountId: accountId)),
     );
+    final categoriesById = ref.watch(categoriesByIdProvider);
+    final accountsById = ref.watch(accountsByIdProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transaksi')),
       body: Column(
         children: [
+          const _SearchField(),
           const _AccountBalanceStrip(),
           Expanded(
             child: transactionsAsync.when(
@@ -41,14 +68,25 @@ class TransactionsListScreen extends ConsumerWidget {
                     TransactionFilter(accountId: accountId))),
               ),
               data: (transactions) {
-                if (transactions.isEmpty) {
+                final filtered = filterTransactionsBySearch(
+                  transactions,
+                  query,
+                  categoriesById,
+                  accountsById,
+                );
+                if (filtered.isEmpty) {
+                  if (query.isNotEmpty) {
+                    return const _EmptyState(
+                        message: 'Ga ada transaksi yang cocok');
+                  }
                   return accountId != null
-                      ? const _EmptyState(filtered: true)
+                      ? const _EmptyState(
+                          message: 'Belum ada transaksi di akun ini')
                       : AppEmptyState.transactions(
                           onAdd: () => context.push('/transactions/add'),
                         );
                 }
-                return _GroupedList(transactions: transactions);
+                return GroupedTransactionsList(transactions: filtered);
               },
             ),
           ),
@@ -58,30 +96,59 @@ class TransactionsListScreen extends ConsumerWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.filtered});
+class _SearchField extends ConsumerStatefulWidget {
+  const _SearchField();
 
-  final bool filtered;
+  @override
+  ConsumerState<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends ConsumerState<_SearchField> {
+  late final _controller =
+      TextEditingController(text: ref.read(txnSearchQueryProvider));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(filtered
-              ? 'Belum ada transaksi di akun ini'
-              : 'Belum ada transaksi'),
-          if (!filtered) ...[
-            const SizedBox(height: 8),
-            FilledButton(
-              onPressed: () => context.push('/transactions/add'),
-              child: const Text('Catat transaksi pertama'),
-            ),
-          ],
-        ],
+    final hasQuery = ref.watch(txnSearchQueryProvider).isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          hintText: 'Cari catatan, kategori, atau akun',
+          prefixIcon: const Icon(Icons.search),
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          suffixIcon: hasQuery
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _controller.clear();
+                    ref.read(txnSearchQueryProvider.notifier).state = '';
+                  },
+                )
+              : null,
+        ),
+        onChanged: (v) => ref.read(txnSearchQueryProvider.notifier).state = v,
       ),
     );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text(message));
   }
 }
 
@@ -212,8 +279,8 @@ class _BalanceCard extends StatelessWidget {
   }
 }
 
-class _GroupedList extends StatelessWidget {
-  const _GroupedList({required this.transactions});
+class GroupedTransactionsList extends StatelessWidget {
+  const GroupedTransactionsList({super.key, required this.transactions});
 
   final List<Transaction> transactions;
 
