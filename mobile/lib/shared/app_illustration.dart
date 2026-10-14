@@ -35,6 +35,12 @@ class AppEmptyState extends StatelessWidget {
         onAction: onAdd,
       );
 
+  factory AppEmptyState.debts({VoidCallback? onAdd}) => AppEmptyState(
+        message: 'Belum ada utang/piutang tercatat.',
+        actionLabel: onAdd == null ? null : 'Tambah utang/piutang',
+        onAction: onAdd,
+      );
+
   factory AppEmptyState.recurring({VoidCallback? onAdd}) => AppEmptyState(
         message: 'Belum ada transaksi berulang.',
         actionLabel: onAdd == null ? null : 'Tambah aturan',

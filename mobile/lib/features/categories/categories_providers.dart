@@ -41,3 +41,13 @@ final categoriesByIdProvider =
       ref.watch(_allCategoriesProvider).valueOrNull ?? const <Category>[];
   return {for (final c in list) c.id: c};
 });
+
+/// Pas app launch: retag transaksi lama tanpa kategori ke kategori sistem
+/// "Penyesuaian". Lokal, gak nge-block first frame (mirror recurringStartupProvider).
+final categoriesBackfillStartupProvider = FutureProvider<void>((ref) async {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  if (userId == null) return;
+  await ref
+      .read(categoriesRepositoryProvider)
+      .backfillUncategorizedTransactions(userId);
+});

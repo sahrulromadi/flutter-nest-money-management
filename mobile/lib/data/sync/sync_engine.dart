@@ -29,6 +29,9 @@ class SyncEngine {
     final goals = await _db.goalsDao.findPendingSync();
     if (goals.isNotEmpty) changes['goals'] = goals.map(goalToJson).toList();
 
+    final debts = await _db.debtsDao.findPendingSync();
+    if (debts.isNotEmpty) changes['debts'] = debts.map(debtToJson).toList();
+
     final rules = await _db.recurringRulesDao.findPendingSync();
     if (rules.isNotEmpty) {
       changes['recurring_rules'] = rules.map(recurringRuleToJson).toList();
@@ -59,6 +62,9 @@ class SyncEngine {
     for (final g in goals) {
       await _db.goalsDao.clearPendingSync(g.id);
     }
+    for (final d in debts) {
+      await _db.debtsDao.clearPendingSync(d.id);
+    }
     for (final r in rules) {
       await _db.recurringRulesDao.clearPendingSync(r.id);
     }
@@ -85,6 +91,9 @@ class SyncEngine {
     }
     for (final row in result['goals'] ?? const []) {
       await _db.goalsDao.upsert(goalFromJson(row));
+    }
+    for (final row in result['debts'] ?? const []) {
+      await _db.debtsDao.upsert(debtFromJson(row));
     }
     for (final row in result['recurring_rules'] ?? const []) {
       await _db.recurringRulesDao.upsert(recurringRuleFromJson(row));

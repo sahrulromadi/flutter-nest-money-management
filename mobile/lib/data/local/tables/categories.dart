@@ -12,6 +12,10 @@ class Categories extends Table {
   TextColumn get parentId => text().named('parent_id').nullable()();
   IntColumn get sortOrder =>
       integer().named('sort_order').withDefault(const Constant(0))();
+  // Kategori sistem (mis. "Penyesuaian") dibuat otomatis, ga muncul di
+  // picker transaksi manual (plan 036 item 2).
+  BoolColumn get isSystem =>
+      boolean().named('is_system').withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
   DateTimeColumn get updatedAt => dateTime().named('updated_at')();
   DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();

@@ -4,13 +4,14 @@ import '../../data/local/app_database.dart';
 import '../../data/local/database_provider.dart';
 import '../../data/repository/transactions_repository.dart';
 import '../auth/current_user_provider.dart';
+import '../categories/categories_providers.dart';
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return TransactionsRepository(
     db.transactionsDao,
     db.accountsDao,
-    db.categoriesDao,
+    ref.watch(categoriesRepositoryProvider),
   );
 });
 

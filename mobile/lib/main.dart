@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app/router.dart';
+import 'features/categories/categories_providers.dart';
 import 'features/recurring/recurring_providers.dart';
 import 'theme/app_theme.dart';
 
@@ -22,6 +23,8 @@ class MoneyManagementApp extends ConsumerWidget {
     // Pas app launch: generate transaksi dari recurring rule yang jatuh tempo.
     // Lokal, gak butuh login, best-effort (gak nge-block first frame).
     ref.watch(recurringStartupProvider);
+    // Retag transaksi lama tanpa kategori ke kategori sistem "Penyesuaian".
+    ref.watch(categoriesBackfillStartupProvider);
 
     return MaterialApp.router(
       title: 'Money Management',

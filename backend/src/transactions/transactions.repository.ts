@@ -15,6 +15,7 @@ export interface Transaction {
   note: string | null;
   recurring_rule_id: string | null;
   goal_id: string | null;
+  debt_id: string | null;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;

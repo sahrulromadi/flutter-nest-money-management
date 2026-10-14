@@ -72,6 +72,16 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     return q.watchSingle().map((r) => r.read(transactions.amount.sum()) ?? 0);
   }
 
+  /// Total nominal transaksi (belum kehapus) yang di-tag ke utang/piutang ini
+  /// — reaktif. Progress pelunasan (plan 036 item 5).
+  Stream<double> watchDebtTotal(String debtId) {
+    final q = selectOnly(transactions)
+      ..addColumns([transactions.amount.sum()])
+      ..where(transactions.debtId.equals(debtId) &
+          transactions.deletedAt.isNull());
+    return q.watchSingle().map((r) => r.read(transactions.amount.sum()) ?? 0);
+  }
+
   // ---------- laporan / budget (plan 029 Item 3, ganti /reports/*) ----------
 
   /// SUM Expense untuk 1 kategori dalam rentang tanggal — reaktif. Progress budget.
@@ -176,6 +186,37 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     final row = await q.getSingle();
     return row.read(transactions.id.count()) ?? 0;
   }
+
+  /// Tipe (Income/Expense) yang masih punya transaksi tanpa kategori buat
+  /// [userId] — dipake backfill kategori sistem (plan 036 item 2).
+  Future<List<String>> findUncategorizedTypes(String userId) async {
+    final rows = await (selectOnly(transactions, distinct: true)
+          ..addColumns([transactions.type])
+          ..where(transactions.userId.equals(userId) &
+              transactions.categoryId.isNull() &
+              transactions.type.isIn(const ['Income', 'Expense'])))
+        .get();
+    return rows.map((r) => r.read(transactions.type)!).toList();
+  }
+
+  /// Retag semua transaksi [type] milik [userId] yang category_id-nya NULL
+  /// ke [categoryId] (kategori sistem) — backfill data lama (plan 036 item 2).
+  Future<void> retagUncategorized(
+    String userId,
+    String type,
+    String categoryId,
+    DateTime now,
+  ) =>
+      (update(transactions)
+            ..where((t) =>
+                t.userId.equals(userId) &
+                t.categoryId.isNull() &
+                t.type.equals(type)))
+          .write(TransactionsCompanion(
+        categoryId: Value(categoryId),
+        updatedAt: Value(now),
+        pendingSync: const Value(true),
+      ));
 
   Future<void> upsert(TransactionsCompanion row) =>
       into(transactions).insertOnConflictUpdate(row);

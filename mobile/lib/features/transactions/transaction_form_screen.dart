@@ -10,6 +10,7 @@ import '../../shared/skeleton.dart';
 import '../accounts/accounts_providers.dart';
 import '../auth/current_user_provider.dart';
 import '../categories/categories_providers.dart';
+import '../debts/debts_providers.dart';
 import '../goals/goals_providers.dart';
 import 'transactions_providers.dart';
 
@@ -32,6 +33,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   String? _transferToAccountId;
   String? _categoryId;
   String? _goalId;
+  String? _debtId;
   DateTime _occurredAt = DateTime.now();
   final _noteController = TextEditingController();
   final _feeController = TextEditingController(); // biaya admin transfer (plan 028 Item 2)
@@ -67,6 +69,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       _transferToAccountId = t.transferToAccountId;
       _categoryId = t.categoryId;
       _goalId = t.goalId;
+      _debtId = t.debtId;
       _occurredAt = t.occurredAt;
       _noteController.text = t.note ?? '';
     });
@@ -128,6 +131,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           categoryId: _type == 'Transfer' ? null : _categoryId,
           note: note,
           goalId: _goalId,
+          debtId: _debtId,
         );
       } else {
         final userId = await ref.read(currentUserIdProvider.future);
@@ -141,6 +145,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           transferToAccountId: _type == 'Transfer' ? _transferToAccountId : null,
           note: note,
           goalId: _goalId,
+          debtId: _debtId,
         );
 
         // Biaya admin transfer -> Expense turunan di akun asal (plan 028 Item 2).
@@ -311,6 +316,33 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ...goals.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name))),
                       ],
                       onChanged: (v) => setState(() => _goalId = v),
+                    );
+                  },
+                  orElse: () => const SizedBox.shrink(),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, _) {
+                final debtsAsync = ref.watch(debtsListProvider);
+                return debtsAsync.maybeWhen(
+                  data: (debts) {
+                    if (debts.isEmpty) return const SizedBox.shrink();
+                    return DropdownButtonFormField<String?>(
+                      initialValue: _debtId,
+                      decoration: const InputDecoration(
+                          labelText: 'Tag ke utang/piutang (opsional)'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Tidak ditag')),
+                        ...debts.map((d) => DropdownMenuItem(
+                              value: d.id,
+                              child: Text(
+                                '${d.direction == 'Utang' ? 'Utang ke' : 'Piutang dari'} ${d.counterparty}',
+                              ),
+                            )),
+                      ],
+                      onChanged: (v) => setState(() => _debtId = v),
                     );
                   },
                   orElse: () => const SizedBox.shrink(),

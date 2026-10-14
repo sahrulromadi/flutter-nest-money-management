@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../categories/categories_list_screen.dart';
+import '../debts/debts_list_screen.dart';
 import '../goals/goals_list_screen.dart';
 import '../recurring/recurring_list_screen.dart';
 import '../settings/settings_screen.dart';
@@ -67,6 +68,14 @@ class MoreScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const GoalsListScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.handshake_outlined),
+            title: const Text('Utang & Piutang'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DebtsListScreen()),
             ),
           ),
           const Divider(),

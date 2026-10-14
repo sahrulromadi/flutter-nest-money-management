@@ -11,7 +11,10 @@ class CategoriesDao extends DatabaseAccessor<AppDatabase>
 
   Stream<List<Category>> watchAll(String userId, {String? type}) {
     final query = select(categories)
-      ..where((t) => t.userId.equals(userId) & t.deletedAt.isNull());
+      ..where((t) =>
+          t.userId.equals(userId) &
+          t.deletedAt.isNull() &
+          t.isSystem.equals(false));
     if (type != null) {
       query.where((t) => t.type.equals(type));
     }
@@ -29,6 +32,16 @@ class CategoriesDao extends DatabaseAccessor<AppDatabase>
 
   Future<Category?> findById(String id) =>
       (select(categories)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// Kategori sistem (is_system=true) buat [type] milik [userId], kalau ada.
+  Future<Category?> findSystemCategory(String userId, String type) =>
+      (select(categories)
+            ..where((t) =>
+                t.userId.equals(userId) &
+                t.type.equals(type) &
+                t.isSystem.equals(true) &
+                t.deletedAt.isNull()))
+          .getSingleOrNull();
 
   /// Set urutan baru buat daftar id (index = sort_order). Semua ditandai dirty.
   Future<void> reorder(List<String> orderedIds, DateTime now) async {

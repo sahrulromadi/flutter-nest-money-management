@@ -47,6 +47,7 @@ Map<String, dynamic> categoryToJson(Category c) => {
       'type': c.type,
       'parent_id': c.parentId,
       'sort_order': c.sortOrder,
+      'is_system': c.isSystem,
       'created_at': _timestamp(c.createdAt),
       'updated_at': _timestamp(c.updatedAt),
       'deleted_at': c.deletedAt == null ? null : _timestamp(c.deletedAt!),
@@ -59,6 +60,7 @@ CategoriesCompanion categoryFromJson(Map<String, dynamic> j) => CategoriesCompan
       type: j['type'] as String,
       parentId: Value(j['parent_id'] as String?),
       sortOrder: Value((j['sort_order'] as num?)?.toInt() ?? 0),
+      isSystem: Value(j['is_system'] as bool? ?? false),
       createdAt: _parseDate(j['created_at'] as String),
       updatedAt: _parseDate(j['updated_at'] as String),
       deletedAt: Value(_parseNullableDate(j['deleted_at'])),
@@ -148,6 +150,7 @@ Map<String, dynamic> transactionToJson(Transaction t) => {
       'note': t.note,
       'recurring_rule_id': t.recurringRuleId,
       'goal_id': t.goalId,
+      'debt_id': t.debtId,
       'created_at': _timestamp(t.createdAt),
       'updated_at': _timestamp(t.updatedAt),
       'deleted_at': t.deletedAt == null ? null : _timestamp(t.deletedAt!),
@@ -166,6 +169,36 @@ TransactionsCompanion transactionFromJson(Map<String, dynamic> j) =>
       note: Value(j['note'] as String?),
       recurringRuleId: Value(j['recurring_rule_id'] as String?),
       goalId: Value(j['goal_id'] as String?),
+      debtId: Value(j['debt_id'] as String?),
+      createdAt: _parseDate(j['created_at'] as String),
+      updatedAt: _parseDate(j['updated_at'] as String),
+      deletedAt: Value(_parseNullableDate(j['deleted_at'])),
+      pendingSync: const Value(false),
+    );
+
+// ---------- debts ----------
+
+Map<String, dynamic> debtToJson(Debt d) => {
+      'id': d.id,
+      'user_id': d.userId,
+      'direction': d.direction,
+      'counterparty': d.counterparty,
+      'amount': d.amount,
+      'due_date': d.dueDate == null ? null : _dateOnly(d.dueDate!),
+      'note': d.note,
+      'created_at': _timestamp(d.createdAt),
+      'updated_at': _timestamp(d.updatedAt),
+      'deleted_at': d.deletedAt == null ? null : _timestamp(d.deletedAt!),
+    };
+
+DebtsCompanion debtFromJson(Map<String, dynamic> j) => DebtsCompanion.insert(
+      id: j['id'] as String,
+      userId: j['user_id'] as String,
+      direction: j['direction'] as String,
+      counterparty: j['counterparty'] as String,
+      amount: (j['amount'] as num).toDouble(),
+      dueDate: Value(_parseNullableDate(j['due_date'])),
+      note: Value(j['note'] as String?),
       createdAt: _parseDate(j['created_at'] as String),
       updatedAt: _parseDate(j['updated_at'] as String),
       deletedAt: Value(_parseNullableDate(j['deleted_at'])),

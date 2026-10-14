@@ -9,6 +9,7 @@ export interface Category {
   type: 'Income' | 'Expense';
   parent_id: string | null;
   sort_order: number;
+  is_system: boolean;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;

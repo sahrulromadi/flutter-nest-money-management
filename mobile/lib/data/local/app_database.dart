@@ -11,6 +11,7 @@ import 'daos/accounts_dao.dart';
 import 'daos/periods_dao.dart';
 import 'daos/budgets_dao.dart';
 import 'daos/categories_dao.dart';
+import 'daos/debts_dao.dart';
 import 'daos/goals_dao.dart';
 import 'daos/recurring_rules_dao.dart';
 import 'daos/transactions_dao.dart';
@@ -18,6 +19,7 @@ import 'tables/accounts.dart';
 import 'tables/periods.dart';
 import 'tables/budgets.dart';
 import 'tables/categories.dart';
+import 'tables/debts.dart';
 import 'tables/goals.dart';
 import 'tables/recurring_rules.dart';
 import 'tables/transactions.dart';
@@ -32,6 +34,7 @@ const _secureStorage = FlutterSecureStorage();
     Accounts,
     Categories,
     Goals,
+    Debts,
     RecurringRules,
     Transactions,
     Periods,
@@ -41,6 +44,7 @@ const _secureStorage = FlutterSecureStorage();
     AccountsDao,
     CategoriesDao,
     GoalsDao,
+    DebtsDao,
     RecurringRulesDao,
     TransactionsDao,
     PeriodsDao,
@@ -50,29 +54,23 @@ const _secureStorage = FlutterSecureStorage();
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // APK masih fase development. Naikin `schemaVersion` tiap ubah struktur tabel
-  // → `onUpgrade` DROP semua + createAll (data lokal ke-reset, ga perlu
-  // uninstall manual). Migrasi stepwise beneran ditambah pas rilis.
+  // v4 (plan 036) — ganti dari strategi "dev nuke" (drop semua + createAll)
+  // ke additive beneran. Data real udah ada & sempet kena insiden ke-wipe
+  // (Postgres volume ke-delete) — ga boleh keulang ke-reset gara-gara
+  // schema bump mobile. Tiap versi baru nambah step `if (from < N)` sendiri,
+  // ga pernah drop tabel/data existing.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
-          for (final t in [
-            'budgets',
-            'periods',
-            'budget_periods',
-            'transactions',
-            'recurring_rules',
-            'goals',
-            'categories',
-            'accounts',
-          ]) {
-            await m.database.customStatement('DROP TABLE IF EXISTS $t');
+          if (from < 4) {
+            await m.createTable(debts);
+            await m.addColumn(categories, categories.isSystem);
+            await m.addColumn(transactions, transactions.debtId);
           }
-          await m.createAll();
         },
       );
 
@@ -104,6 +102,7 @@ class AppDatabase extends _$AppDatabase {
       (select(goals)..where((t) => t.userId.equals(userId))).get(),
       (select(recurringRules)..where((t) => t.userId.equals(userId))).get(),
       (select(periods)..where((t) => t.userId.equals(userId))).get(),
+      (select(debts)..where((t) => t.userId.equals(userId))).get(),
     ]);
     return rows.any((r) => r.isNotEmpty);
   }
@@ -117,6 +116,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(transactions).go();
       await delete(recurringRules).go();
       await delete(goals).go();
+      await delete(debts).go();
       await delete(categories).go();
       await delete(accounts).go();
     });
@@ -136,6 +136,8 @@ class AppDatabase extends _$AppDatabase {
           .write(CategoriesCompanion(userId: owner, pendingSync: dirty));
       await (update(goals)..where((t) => t.userId.equals(from)))
           .write(GoalsCompanion(userId: owner, pendingSync: dirty));
+      await (update(debts)..where((t) => t.userId.equals(from)))
+          .write(DebtsCompanion(userId: owner, pendingSync: dirty));
       await (update(recurringRules)..where((t) => t.userId.equals(from)))
           .write(RecurringRulesCompanion(userId: owner, pendingSync: dirty));
       await (update(transactions)..where((t) => t.userId.equals(from)))

@@ -15,6 +15,7 @@ class Transactions extends Table {
   TextColumn get recurringRuleId =>
       text().named('recurring_rule_id').nullable()();
   TextColumn get goalId => text().named('goal_id').nullable()();
+  TextColumn get debtId => text().named('debt_id').nullable()();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
   DateTimeColumn get updatedAt => dateTime().named('updated_at')();
   DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
