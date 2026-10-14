@@ -148,35 +148,6 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  /// Cashflow harian (income vs expense) dalam rentang — reaktif.
-  Stream<List<({DateTime day, double income, double expense})>>
-      watchCashflowTrend(String userId, DateTime from, DateTime to) {
-    final q = select(transactions)
-      ..where((t) =>
-          t.userId.equals(userId) &
-          t.deletedAt.isNull() &
-          t.occurredAt.isBetweenValues(from, to))
-      ..orderBy([(t) => OrderingTerm.asc(t.occurredAt)]);
-    return q.watch().map((rows) {
-      final byDay = <DateTime, ({double income, double expense})>{};
-      for (final t in rows) {
-        final d =
-            DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day);
-        final cur = byDay[d] ?? (income: 0.0, expense: 0.0);
-        if (t.type == 'Income') {
-          byDay[d] = (income: cur.income + t.amount, expense: cur.expense);
-        } else if (t.type == 'Expense') {
-          byDay[d] = (income: cur.income, expense: cur.expense + t.amount);
-        }
-      }
-      final days = byDay.keys.toList()..sort();
-      return [
-        for (final d in days)
-          (day: d, income: byDay[d]!.income, expense: byDay[d]!.expense),
-      ];
-    });
-  }
-
   /// Jumlah transaksi (belum kehapus) yang pakai kategori ini.
   Future<int> countForCategory(String categoryId) async {
     final q = selectOnly(transactions)

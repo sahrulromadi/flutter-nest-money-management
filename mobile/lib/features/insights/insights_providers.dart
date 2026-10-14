@@ -105,20 +105,6 @@ final categoryBreakdownProvider = StreamProvider.autoDispose
       .watchCategoryBreakdown(userId, type, r.from, r.to);
 });
 
-final cashflowTrendProvider = StreamProvider.autoDispose<
-    List<({DateTime day, double income, double expense})>>((ref) async* {
-  final userId = await ref.watch(currentUserIdProvider.future);
-  if (userId == null) {
-    yield const [];
-    return;
-  }
-  final r = ref.watch(reportRangeProvider);
-  yield* ref
-      .watch(appDatabaseProvider)
-      .transactionsDao
-      .watchCashflowTrend(userId, r.from, r.to);
-});
-
 typedef PeriodSummary = ({Period period, double income, double expense});
 
 /// Income vs expense buat SEMUA periode — section "Ringkasan per Periode".

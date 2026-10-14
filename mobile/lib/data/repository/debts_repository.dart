@@ -40,5 +40,29 @@ class DebtsRepository {
     );
   }
 
+  Future<void> update({
+    required String id,
+    String? direction,
+    String? counterparty,
+    double? amount,
+    DateTime? dueDate,
+    String? note,
+  }) {
+    final now = DateTime.now().toUtc();
+    return _dao.updateFields(
+      id,
+      DebtsCompanion(
+        direction: direction != null ? Value(direction) : const Value.absent(),
+        counterparty:
+            counterparty != null ? Value(counterparty) : const Value.absent(),
+        amount: amount != null ? Value(amount) : const Value.absent(),
+        dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
+        note: note != null ? Value(note) : const Value.absent(),
+        updatedAt: Value(now),
+        pendingSync: const Value(true),
+      ),
+    );
+  }
+
   Future<void> delete(String id) => _dao.softDelete(id, DateTime.now().toUtc());
 }

@@ -18,6 +18,9 @@ class DebtsDao extends DatabaseAccessor<AppDatabase> with _$DebtsDaoMixin {
   Future<void> upsert(DebtsCompanion row) =>
       into(debts).insertOnConflictUpdate(row);
 
+  Future<void> updateFields(String id, DebtsCompanion row) =>
+      (update(debts)..where((t) => t.id.equals(id))).write(row);
+
   Future<void> softDelete(String id, DateTime now) =>
       (update(debts)..where((t) => t.id.equals(id))).write(
         DebtsCompanion(

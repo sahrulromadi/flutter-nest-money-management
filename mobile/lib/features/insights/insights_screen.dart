@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +11,11 @@ import '../../theme/app_semantic_colors.dart';
 import '../../theme/chart_colors.dart';
 import '../auth/current_user_provider.dart';
 import '../categories/categories_providers.dart';
+import '../debts/debt_form_screen.dart';
+import '../debts/debts_list_screen.dart';
+import '../debts/debts_providers.dart';
+import '../goals/goals_list_screen.dart';
+import '../goals/goals_providers.dart';
 import '../transactions/category_transactions_screen.dart';
 import 'budget_form_sheet.dart';
 import 'insights_providers.dart';
@@ -81,11 +85,8 @@ class InsightsScreen extends ConsumerWidget {
                 _BudgetList(readOnly: closed),
                 const SizedBox(height: 24),
               ],
-              Text('Cashflow Trend',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              const _CashflowChart(),
-              const SizedBox(height: 24),
+              const _GoalsInsightSection(),
+              const _DebtsInsightSection(),
               Text('Breakdown Pengeluaran',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
@@ -296,75 +297,6 @@ class _BudgetList extends ConsumerWidget {
   }
 }
 
-class _CashflowChart extends ConsumerWidget {
-  const _CashflowChart();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trendAsync = ref.watch(cashflowTrendProvider);
-    final semantic = context.semanticColors;
-
-    return trendAsync.when(
-      loading: () => const SizedBox(
-        height: 160,
-        child: Skeleton(height: 160, radius: 6),
-      ),
-      error: (e, _) =>
-          AppErrorState(onRetry: () => ref.invalidate(cashflowTrendProvider)),
-      data: (points) {
-        if (points.isEmpty) return const Text('Belum ada data');
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 160,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [
-                        for (var i = 0; i < points.length; i++)
-                          FlSpot(i.toDouble(), points[i].income),
-                      ],
-                      color: semantic.income,
-                      isCurved: true,
-                      barWidth: 2,
-                      // show:true — periode baru sering cuma punya 1 hari data;
-                      // 1 titik tanpa dot ga kegambar sama sekali (garis butuh 2+).
-                      dotData: const FlDotData(show: true),
-                    ),
-                    LineChartBarData(
-                      spots: [
-                        for (var i = 0; i < points.length; i++)
-                          FlSpot(i.toDouble(), points[i].expense),
-                      ],
-                      color: semantic.expense,
-                      isCurved: true,
-                      barWidth: 2,
-                      dotData: const FlDotData(show: true),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _LegendDot(color: semantic.income, label: 'Income'),
-                const SizedBox(width: 16),
-                _LegendDot(color: semantic.expense, label: 'Expense'),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
 class _CategoryBreakdownChart extends ConsumerWidget {
   const _CategoryBreakdownChart({required this.type});
 
@@ -447,21 +379,163 @@ class _CategoryBreakdownChart extends ConsumerWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
-
-  final Color color;
-  final String label;
+/// Ringkasan Goals di Insights (kalau ada) — nama + progress bar. Tap row /
+/// "Lihat semua" -> GoalsListScreen (gak ada edit per-item, plan 036).
+class _GoalsInsightSection extends ConsumerWidget {
+  const _GoalsInsightSection();
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goalsAsync = ref.watch(goalsListProvider);
+    final goals = goalsAsync.valueOrNull ?? const <Goal>[];
+    if (goals.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Goals', style: Theme.of(context).textTheme.titleMedium),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GoalsListScreen()),
+              ),
+              child: const Text('Lihat semua'),
+            ),
+          ],
+        ),
+        for (final g in goals) _GoalInsightRow(goal: g),
+        const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+class _GoalInsightRow extends ConsumerWidget {
+  const _GoalInsightRow({required this.goal});
+
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final semantic = context.semanticColors;
+    final collected = ref.watch(goalProgressProvider(goal.id)).valueOrNull ?? 0;
+    final pct = goal.targetAmount > 0
+        ? (collected / goal.targetAmount * 100).round()
+        : 0;
+    final color =
+        pct >= 100 ? semantic.income : Theme.of(context).colorScheme.primary;
+
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const GoalsListScreen()),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(goal.name),
+                Text(
+                    '${formatRupiah(collected)} / ${formatRupiah(goal.targetAmount)}'),
+              ],
+            ),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (pct / 100).clamp(0, 1).toDouble(),
+                color: color,
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ringkasan Utang/Piutang di Insights (kalau ada). Tap row -> edit debt
+/// langsung (plan 036 — fitur edit); "Lihat semua" -> DebtsListScreen.
+class _DebtsInsightSection extends ConsumerWidget {
+  const _DebtsInsightSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final debtsAsync = ref.watch(debtsListProvider);
+    final debts = debtsAsync.valueOrNull ?? const <Debt>[];
+    if (debts.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Utang & Piutang', style: Theme.of(context).textTheme.titleMedium),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DebtsListScreen()),
+              ),
+              child: const Text('Lihat semua'),
+            ),
+          ],
+        ),
+        for (final d in debts) _DebtInsightRow(debt: d),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _DebtInsightRow extends ConsumerWidget {
+  const _DebtInsightRow({required this.debt});
+
+  final Debt debt;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final semantic = context.semanticColors;
+    final paid = ref.watch(debtProgressProvider(debt.id)).valueOrNull ?? 0;
+    final pct = debt.amount > 0 ? (paid / debt.amount * 100).round() : 0;
+    final color =
+        pct >= 100 ? semantic.income : Theme.of(context).colorScheme.primary;
+    final label =
+        '${debt.direction == 'Utang' ? 'Utang ke' : 'Piutang dari'} ${debt.counterparty}';
+
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => DebtFormScreen(debt: debt)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(label),
+                Text('${formatRupiah(paid)} / ${formatRupiah(debt.amount)}'),
+              ],
+            ),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (pct / 100).clamp(0, 1).toDouble(),
+                color: color,
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

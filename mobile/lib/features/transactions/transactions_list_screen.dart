@@ -18,27 +18,23 @@ import 'transactions_providers.dart';
 /// Filter akun aktif di halaman Transactions. `null` = semua akun.
 final txnAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
 
-/// Kata kunci search transaksi (nama/catatan, kategori, akun) — plan 036 item 1.
+/// Filter kategori aktif di halaman Transactions. `null` = semua kategori.
+final txnCategoryFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
+
+/// Kata kunci search transaksi — catatan doang (plan 036 item 1).
 final txnSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
-/// Transaksi yang match [query] di catatan, nama kategori, atau nama akun
-/// (case-insensitive substring). Kosong = ga difilter.
+/// Transaksi yang catatannya match [query] (case-insensitive substring).
+/// Kosong = ga difilter.
 List<Transaction> filterTransactionsBySearch(
   List<Transaction> transactions,
   String query,
-  Map<String, Category> categoriesById,
-  Map<String, Account> accountsById,
 ) {
   final q = query.trim().toLowerCase();
   if (q.isEmpty) return transactions;
-  return transactions.where((t) {
-    if (t.note?.toLowerCase().contains(q) == true) return true;
-    final catName =
-        t.categoryId == null ? null : categoriesById[t.categoryId]?.name;
-    if (catName != null && catName.toLowerCase().contains(q)) return true;
-    final accName = accountsById[t.accountId]?.name;
-    return accName != null && accName.toLowerCase().contains(q);
-  }).toList();
+  return transactions
+      .where((t) => t.note?.toLowerCase().contains(q) == true)
+      .toList();
 }
 
 class TransactionsListScreen extends ConsumerWidget {
@@ -47,41 +43,33 @@ class TransactionsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountId = ref.watch(txnAccountFilterProvider);
+    final categoryId = ref.watch(txnCategoryFilterProvider);
     final query = ref.watch(txnSearchQueryProvider);
-    final transactionsAsync = ref.watch(
-      transactionsListProvider(TransactionFilter(accountId: accountId)),
-    );
-    final categoriesById = ref.watch(categoriesByIdProvider);
-    final accountsById = ref.watch(accountsByIdProvider);
+    final filter = TransactionFilter(accountId: accountId, categoryId: categoryId);
+    final transactionsAsync = ref.watch(transactionsListProvider(filter));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transaksi')),
       body: Column(
         children: [
           const _SearchField(),
+          const _CategoryFilterChip(),
           const _AccountBalanceStrip(),
           Expanded(
             child: transactionsAsync.when(
               loading: () => const SkeletonList(count: 8),
-              error: (e, _) => AppErrorState(
-                onRetry: () => ref.invalidate(transactionsListProvider(
-                    TransactionFilter(accountId: accountId))),
-              ),
+              error: (e, _) =>
+                  AppErrorState(onRetry: () => ref.invalidate(transactionsListProvider(filter))),
               data: (transactions) {
-                final filtered = filterTransactionsBySearch(
-                  transactions,
-                  query,
-                  categoriesById,
-                  accountsById,
-                );
+                final filtered = filterTransactionsBySearch(transactions, query);
                 if (filtered.isEmpty) {
                   if (query.isNotEmpty) {
                     return const _EmptyState(
                         message: 'Ga ada transaksi yang cocok');
                   }
-                  return accountId != null
+                  return (accountId != null || categoryId != null)
                       ? const _EmptyState(
-                          message: 'Belum ada transaksi di akun ini')
+                          message: 'Belum ada transaksi dengan filter ini')
                       : AppEmptyState.transactions(
                           onAdd: () => context.push('/transactions/add'),
                         );
@@ -91,6 +79,49 @@ class TransactionsListScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Dropdown filter kategori (semua type) di atas list — plan 036 item 1.
+class _CategoryFilterChip extends ConsumerWidget {
+  const _CategoryFilterChip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesById = ref.watch(categoriesByIdProvider);
+    final selected = ref.watch(txnCategoryFilterProvider);
+    final expenseAsync = ref.watch(categoriesListProvider('Expense'));
+    final incomeAsync = ref.watch(categoriesListProvider('Income'));
+    final categories = [
+      ...expenseAsync.valueOrNull ?? const <Category>[],
+      ...incomeAsync.valueOrNull ?? const <Category>[],
+    ];
+    if (categories.isEmpty && selected == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: DropdownButtonFormField<String?>(
+        initialValue: selected,
+        decoration: const InputDecoration(
+          labelText: 'Kategori',
+          isDense: true,
+          border: OutlineInputBorder(),
+        ),
+        items: [
+          const DropdownMenuItem(value: null, child: Text('Semua kategori')),
+          for (final c in categories)
+            DropdownMenuItem(value: c.id, child: Text(c.name)),
+          // Kategori ke-hapus/sistem yang lagi di-filter tapi ga ada di picker
+          // biasa — tetep tampil biar dropdown-nya ga "lupa" pilihan lama.
+          if (selected != null && categories.every((c) => c.id != selected))
+            DropdownMenuItem(
+              value: selected,
+              child: Text(categoriesById[selected]?.name ?? '?'),
+            ),
+        ],
+        onChanged: (v) => ref.read(txnCategoryFilterProvider.notifier).state = v,
       ),
     );
   }
@@ -121,7 +152,7 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
       child: TextField(
         controller: _controller,
         decoration: InputDecoration(
-          hintText: 'Cari catatan, kategori, atau akun',
+          hintText: 'Cari catatan',
           prefixIcon: const Icon(Icons.search),
           isDense: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

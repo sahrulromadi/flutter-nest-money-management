@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/local/app_database.dart';
 import '../../shared/calc_amount_field.dart';
 import '../auth/current_user_provider.dart';
 import 'debts_providers.dart';
@@ -9,20 +10,27 @@ import 'debts_providers.dart';
 const _directions = ['Utang', 'Piutang'];
 
 class DebtFormScreen extends ConsumerStatefulWidget {
-  const DebtFormScreen({super.key});
+  const DebtFormScreen({super.key, this.debt, this.initialDirection});
+
+  final Debt? debt;
+  final String? initialDirection;
 
   @override
   ConsumerState<DebtFormScreen> createState() => _DebtFormScreenState();
 }
 
 class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
-  String _direction = 'Utang';
-  final _counterpartyController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
-  DateTime? _dueDate;
+  late String _direction = widget.debt?.direction ?? widget.initialDirection ?? 'Utang';
+  late final _counterpartyController =
+      TextEditingController(text: widget.debt?.counterparty ?? '');
+  late final _amountController =
+      TextEditingController(text: moneyText(widget.debt?.amount ?? 0));
+  late final _noteController = TextEditingController(text: widget.debt?.note ?? '');
+  late DateTime? _dueDate = widget.debt?.dueDate;
   bool _saving = false;
   String? _error;
+
+  bool get _isEdit => widget.debt != null;
 
   @override
   void dispose() {
@@ -49,16 +57,28 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
       _error = null;
     });
     try {
-      final userId = await ref.read(currentUserIdProvider.future);
-      await ref.read(debtsRepositoryProvider).create(
-            userId: userId!,
-            direction: _direction,
-            counterparty: _counterpartyController.text.trim(),
-            amount: amount,
-            dueDate: _dueDate,
-            note: _noteController.text.isEmpty ? null : _noteController.text,
-          );
-      ref.invalidate(debtsListProvider);
+      final repo = ref.read(debtsRepositoryProvider);
+      final note = _noteController.text.isEmpty ? null : _noteController.text;
+      if (_isEdit) {
+        await repo.update(
+          id: widget.debt!.id,
+          direction: _direction,
+          counterparty: _counterpartyController.text.trim(),
+          amount: amount,
+          dueDate: _dueDate,
+          note: note,
+        );
+      } else {
+        final userId = await ref.read(currentUserIdProvider.future);
+        await repo.create(
+          userId: userId!,
+          direction: _direction,
+          counterparty: _counterpartyController.text.trim(),
+          amount: amount,
+          dueDate: _dueDate,
+          note: note,
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());
@@ -67,10 +87,39 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus?'),
+        content: Text(
+          'Catatan ${_direction == 'Utang' ? 'utang ke' : 'piutang dari'} '
+          '"${widget.debt!.counterparty}" bakal dihapus. Transaksi yang '
+          'udah ditag ke sini tetap tersimpan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await ref.read(debtsRepositoryProvider).delete(widget.debt!.id);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Utang/Piutang')),
+      appBar: AppBar(
+        title: Text(_isEdit ? 'Edit Utang/Piutang' : 'Tambah Utang/Piutang'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -99,8 +148,8 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
             onPressed: () async {
               final picked = await showDatePicker(
                 context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now(),
+                initialDate: _dueDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
                 lastDate: DateTime(2100),
               );
               if (picked != null) setState(() => _dueDate = picked);
@@ -124,8 +173,18 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _saving ? null : _submit,
-            child: const Text('Tambah'),
+            child: Text(_isEdit ? 'Simpan' : 'Tambah'),
           ),
+          if (_isEdit) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _saving ? null : _delete,
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Hapus'),
+            ),
+          ],
         ],
       ),
     );

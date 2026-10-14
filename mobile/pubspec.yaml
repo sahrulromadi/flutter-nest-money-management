@@ -43,7 +43,6 @@ dependencies:
   path_provider: ^2.1.6
   uuid: ^4.5.1
   intl: ^0.20.3
-  fl_chart: ^0.70.0
   collection: ^1.19.1
 
 # sqlite3_flutter_libs/sqlcipher_flutter_libs udah EOL (Feb 2026) — package:sqlite3
